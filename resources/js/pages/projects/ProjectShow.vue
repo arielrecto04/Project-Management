@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import FileIcon from '@/components/FileIcon.vue';
-import FileViewer from '@/components/FileViewer.vue';
 import KanbanBoard from '@/components/KanbanBoard.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -193,15 +192,6 @@ const deleteAttachment = (attachmentId: number) => {
         preserveState: true,
     });
 };
-
-// File viewer handling
-const selectedFile = ref(null);
-const isFileViewerOpen = ref(false);
-
-const openFileViewer = (attachment: Attachment) => {
-    selectedFile.value = attachment;
-    isFileViewerOpen.value = true;
-};
 </script>
 
 <template>
@@ -359,10 +349,7 @@ const openFileViewer = (attachment: Attachment) => {
                                         <FileIcon :type="attachment.type" class="h-5 w-5 text-gray-500" />
                                     </div>
                                     <div>
-                                        <h4
-                                            class="cursor-pointer font-medium text-gray-900 group-hover:text-orange-600"
-                                            @click="openFileViewer(attachment)"
-                                        >
+                                        <h4 class="cursor-pointer font-medium text-gray-900 group-hover:text-orange-600">
                                             {{ attachment.name }}
                                         </h4>
                                         <p class="text-sm text-gray-500">
@@ -405,8 +392,6 @@ const openFileViewer = (attachment: Attachment) => {
                 </CardContent>
             </Card>
         </div>
-
-        <FileViewer :is-open="isFileViewerOpen" :file="selectedFile" @close="isFileViewerOpen = false" />
     </AppLayout>
 </template>
 
