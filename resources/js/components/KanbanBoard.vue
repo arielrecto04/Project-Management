@@ -87,41 +87,44 @@ const getStatusColor = (status: string) => {
     }
 };
 
-
-const handleShowDetails = (item: BaseItem) => {
-    defineEmits('')    // Placeholder for showing item details}
-}
 console.log(props.columns);
 </script>
 
 <template>
-    <div class="flex gap-4 overflow-x-auto p-4">
-        <div class="flex min-w-full gap-4">
-            <div v-for="column in columns" :key="column.id"
-                class="w-[350px] flex-shrink-0 rounded-lg bg-orange-50/50 p-4 shadow-md" @dragover.prevent
-                @drop="handleDrop($event, column)">
-                <h2
-                    class="mb-4 flex items-center justify-between border-b border-orange-200/50 pb-2 font-semibold text-gray-700">
+    <div class="flex overflow-x-auto gap-4 p-4">
+        <div class="flex gap-4 min-w-full">
+            <div
+                v-for="column in columns"
+                :key="column.id"
+                class="w-[350px] flex-shrink-0 rounded-lg bg-orange-50/50 p-4 shadow-md"
+                @dragover.prevent
+                @drop="handleDrop($event, column)"
+            >
+                <h2 class="flex justify-between items-center pb-2 mb-4 font-semibold text-gray-700 border-b border-orange-200/50">
                     <span>{{ column.title }}</span>
-                    <span class="rounded-full bg-orange-100 px-2 py-0.5 text-sm text-orange-700">
+                    <span class="px-2 py-0.5 text-sm text-orange-700 bg-orange-100 rounded-full">
                         {{ column.tasks.length }}
                     </span>
                 </h2>
                 <div class="flex flex-col gap-3">
-                    <div v-for="item in column.tasks" :key="item.id"
-                        class="group cursor-move rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md"
-                        draggable="true" @dragstart="handleDragStart($event, item)">
+                    <div
+                        v-for="item in column.tasks"
+                        :key="item.id"
+                        class="p-4 bg-white rounded-lg shadow-sm transition-all cursor-move group hover:shadow-md"
+                        draggable="true"
+                        @dragstart="handleDragStart($event, item)"
+                    >
                         <!-- Card Header -->
-                        <div class="mb-2 flex items-center justify-between">
+                        <div class="flex justify-between items-center mb-2">
                             <h3 class="font-medium text-gray-800">{{ item.title }}</h3>
-                            <span class="rounded-full px-2 py-0.5 text-xs" :class="getStatusColor(item.status)">
+                            <span class="px-2 py-0.5 text-xs rounded-full" :class="getStatusColor(item.status)">
                                 {{ ProjectStatusLabels[item.status as ProjectStatus] }}
                             </span>
                         </div>
 
                         <!-- Card Content -->
                         <div class="space-y-3 text-sm">
-                            <p v-if="item.description" class="line-clamp-2 text-gray-600">
+                            <p v-if="item.description" class="text-gray-600 line-clamp-2">
                                 <span v-html="item.description"></span>
                             </p>
 
@@ -132,9 +135,8 @@ console.log(props.columns);
                             </div>
 
                             <!-- Assignee -->
-                            <div v-if="item.assignee" class="flex items-center gap-2">
-                                <div
-                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs text-orange-700">
+                            <div v-if="item.assignee" class="flex gap-2 items-center">
+                                <div class="flex justify-center items-center w-6 h-6 text-xs text-orange-700 bg-orange-100 rounded-full">
                                     {{ item.assignee.charAt(0).toUpperCase() }}
                                 </div>
                                 <span class="text-sm text-gray-600">{{ item.assignee }}</span>
@@ -143,18 +145,13 @@ console.log(props.columns);
 
                         <!-- Card Actions -->
 
-
-                        <div
-                            class="mt-3 flex justify-end gap-2 border-t border-gray-100 pt-2 opacity-0 transition-opacity group-hover:opacity-100">
-
-                            <slot name="actions">
-                                <Link :href="getItemRoute('edit', item)"
-                                    class="p-1 text-gray-400 hover:text-orange-600">
-                                <PencilIcon class="h-4 w-4" />
+                        <div class="flex gap-2 justify-end pt-2 mt-3 border-t border-gray-100 opacity-0 transition-opacity group-hover:opacity-100">
+                            <slot name="actions" :item="item">
+                                <Link :href="getItemRoute('edit', item)" class="p-1 text-gray-400 hover:text-orange-600">
+                                    <PencilIcon class="w-4 h-4" />
                                 </Link>
-                                <Link :href="getItemRoute('show', item)"
-                                    class="p-1 text-gray-400 hover:text-orange-600">
-                                <EyeIcon class="h-4 w-4" />
+                                <Link :href="getItemRoute('show', item)" class="p-1 text-gray-400 hover:text-orange-600">
+                                    <EyeIcon class="w-4 h-4" />
                                 </Link>
                             </slot>
                         </div>
