@@ -49,7 +49,7 @@ class ProjectAttachmentController extends Controller
      */
     public function download(Project $project, Attachment $attachment)
     {
-        $this->authorize('view', $project);
+
 
         if (!Storage::disk('public')->exists($attachment->file_path)) {
             abort(404);
@@ -66,7 +66,7 @@ class ProjectAttachmentController extends Controller
      */
     public function destroy(Project $project, Attachment $attachment)
     {
-        $this->authorize('update', $project);
+
 
         if (Storage::disk('public')->exists($attachment->file_path)) {
             Storage::disk('public')->delete($attachment->file_path);
