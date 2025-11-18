@@ -28,15 +28,15 @@ const submit = () => {
 
 <template>
     <div class="min-h-screen bg-gray-50">
-        <div class="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div class="flex flex-col flex-1 justify-center py-12 min-h-full sm:px-6 lg:px-8">
             <div class="sm:mx-auto sm:w-full sm:max-w-md">
-                <img class="mx-auto h-10 w-auto" src="https://www.innovatotec.com/web/image/277-b178a65d/full%20logo.webp" alt="Innovato" />
-                <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Log in to your account</h2>
+                <img class="mx-auto w-auto h-10" src="https://iits.website/logo.png" alt="Innovato" />
+                <h2 class="mt-6 text-2xl font-bold tracking-tight leading-9 text-center text-gray-900">Log in to your account</h2>
             </div>
 
             <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-                <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
-                    <div v-if="status" class="mb-6 text-center text-sm font-medium text-green-600">
+                <div class="px-6 py-12 bg-white shadow sm:rounded-lg sm:px-12">
+                    <div v-if="status" class="mb-6 text-sm font-medium text-center text-green-600">
                         {{ status }}
                     </div>
 
@@ -58,7 +58,7 @@ const submit = () => {
                         </div>
 
                         <div class="grid gap-2">
-                            <div class="flex items-center justify-between">
+                            <div class="flex justify-between items-center">
                                 <Label for="password" class="text-sm font-medium text-gray-700">Password</Label>
                                 <TextLink
                                     v-if="canResetPassword"
@@ -88,18 +88,18 @@ const submit = () => {
                                     id="remember"
                                     v-model:checked="form.remember"
                                     :tabindex="4"
-                                    class="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                    class="text-orange-600 rounded border-gray-300 focus:ring-orange-500"
                                 />
                                 <span class="text-sm text-gray-500">Remember me</span>
                             </Label>
                         </div>
 
                         <Button type="submit" class="w-full bg-orange-600 hover:bg-orange-700" :tabindex="4" :disabled="form.processing">
-                            <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
+                            <LoaderCircle v-if="form.processing" class="mr-2 w-4 h-4 animate-spin" />
                             Log in
                         </Button>
 
-                        <div class="text-center text-sm text-gray-500">
+                        <div class="text-sm text-center text-gray-500">
                             Don't have an account?
                             <TextLink :href="route('register')" :tabindex="5" class="font-semibold text-orange-600 hover:text-orange-500">
                                 Sign up

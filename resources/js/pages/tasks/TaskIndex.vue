@@ -142,6 +142,7 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
+
     <Head title="My Tasks" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 p-6">
@@ -155,34 +156,22 @@ const formatDate = (date: string) => {
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Search class="h-4 w-4 text-gray-400" />
                     </div>
-                    <input
-                        v-model="searchQuery"
-                        type="search"
-                        placeholder="Search tasks..."
-                        class="block w-full rounded-md border border-gray-200 py-2 pl-10 pr-3 text-sm placeholder:text-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                    />
+                    <input v-model="searchQuery" type="search" placeholder="Search tasks..."
+                        class="block w-full rounded-md border border-gray-200 py-2 pl-10 pr-3 text-sm placeholder:text-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
                 </div>
             </div>
 
             <!-- Stats Grid -->
             <div class="grid gap-6 sm:grid-cols-4">
-                <Card
-                    v-for="(stat, key) in taskStats"
-                    :key="key"
-                    :class="[
-                        'cursor-pointer border-l-4 transition-all duration-200 hover:shadow-md',
-                        stat.color,
-                        activeFilter === stat.status ? 'ring-2 ring-orange-200' : '',
-                    ]"
-                    @click="handleFilterClick(stat.status)"
-                >
+                <Card v-for="(stat, key) in taskStats" :key="key" :class="[
+                    'cursor-pointer border-l-4 transition-all duration-200 hover:shadow-md',
+                    stat.color,
+                    activeFilter === stat.status ? 'ring-2 ring-orange-200' : '',
+                ]" @click="handleFilterClick(stat.status)">
                     <CardHeader class="pb-2">
                         <CardTitle class="flex items-center gap-2 text-sm font-medium text-gray-500">
-                            <component
-                                :is="stat.icon"
-                                class="h-4 w-4"
-                                :class="key === 'total' ? 'text-gray-400' : `text-${stat.color.split('-')[1]}-500`"
-                            />
+                            <component :is="stat.icon" class="h-4 w-4"
+                                :class="key === 'total' ? 'text-gray-400' : `text-${stat.color.split('-')[1]}-500`" />
                             {{ stat.label }}
                         </CardTitle>
                     </CardHeader>
@@ -194,16 +183,19 @@ const formatDate = (date: string) => {
 
             <!-- Tasks Grid -->
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <Card v-for="task in filteredTasks" :key="task.id" class="transition-all duration-200 hover:border-gray-300 hover:shadow-lg">
+                <Card v-for="task in filteredTasks" :key="task.id"
+                    class="transition-all duration-200 hover:border-gray-300 hover:shadow-lg">
                     <CardHeader class="pb-3">
                         <div class="flex items-start justify-between">
                             <div>
                                 <CardTitle class="line-clamp-1">{{ task.name }}</CardTitle>
-                                <Link :href="route('projects.show', task.project.id)" class="mt-1 text-sm text-orange-600 hover:underline">
-                                    {{ task.project.name }}
+                                <Link :href="route('projects.show', task.project.id)"
+                                    class="mt-1 text-sm text-orange-600 hover:underline">
+                                {{ task.project.name }}
                                 </Link>
                             </div>
-                            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="getStatusColor(task.status)">
+                            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                :class="getStatusColor(task.status)">
                                 {{ task.status.replace('_', ' ') }}
                             </span>
                         </div>
@@ -213,19 +205,21 @@ const formatDate = (date: string) => {
 
                         <div class="flex items-center gap-2">
                             <Calendar class="h-4 w-4 text-gray-400" />
-                            <span class="text-sm" :class="{ 'text-red-600': isOverdue(task.due_date) }"> Due {{ formatDate(task.due_date) }} </span>
+                            <span class="text-sm" :class="{ 'text-red-600': isOverdue(task.due_date) }"> Due {{
+                                formatDate(task.due_date) }} </span>
                         </div>
 
                         <div class="flex justify-end gap-2 pt-2">
                             <Link :href="route('tasks.show', task.id)">
-                                <Button variant="default" size="sm">View Details</Button>
+                            <Button variant="default" size="sm">View Details</Button>
                             </Link>
                         </div>
                     </CardContent>
                 </Card>
 
                 <!-- Empty State -->
-                <div v-if="filteredTasks.length === 0" class="col-span-full flex flex-col items-center justify-center p-8 text-center">
+                <div v-if="filteredTasks.length === 0"
+                    class="col-span-full flex flex-col items-center justify-center p-8 text-center">
                     <div class="rounded-full bg-gray-50 p-3">
                         <Search v-if="searchQuery" class="h-6 w-6 text-gray-400" />
                         <ListTodo v-else class="h-6 w-6 text-gray-400" />
@@ -234,10 +228,12 @@ const formatDate = (date: string) => {
                     <p class="mt-1 text-sm text-gray-500">
                         <template v-if="searchQuery">
                             No tasks match your search "{{ searchQuery }}"
-                            <template v-if="activeFilter !== 'all'"> with status "{{ activeFilter.replace('_', ' ') }}" </template>
+                            <template v-if="activeFilter !== 'all'"> with status "{{ activeFilter.replace('_', ' ') }}"
+                            </template>
                         </template>
                         <template v-else>
-                            {{ activeFilter === 'all' ? "You don't have any tasks yet." : `No ${activeFilter.replace('_', ' ')} tasks found.` }}
+                            {{ activeFilter === 'all' ? "You don't have any tasks yet." : `No
+                            ${activeFilter.replace('_', ' ')} tasks found.` }}
                         </template>
                     </p>
                 </div>
@@ -246,7 +242,8 @@ const formatDate = (date: string) => {
             <!-- Active Filter Indicator -->
             <div v-if="activeFilter !== 'all'" class="flex items-center gap-2 pt-4">
                 <span class="text-sm text-gray-500">Filtered by:</span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                <span
+                    class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
                     {{ activeFilter.replace('_', ' ') }}
                     <button @click="activeFilter = 'all'" class="ml-1 rounded-full p-0.5 hover:bg-orange-100">
                         <span class="sr-only">Clear filter</span>
@@ -259,16 +256,13 @@ const formatDate = (date: string) => {
 
             <!-- Pagination -->
             <div v-if="tasks.last_page > 1" class="flex items-center justify-between border-t pt-4">
-                <p class="text-sm text-gray-500">Showing {{ tasks.from }} to {{ tasks.to }} of {{ tasks.total }} tasks</p>
+                <p class="text-sm text-gray-500">Showing {{ tasks.from }} to {{ tasks.to }} of {{ tasks.total }} tasks
+                </p>
                 <div class="flex gap-2">
-                    <Link
-                        v-for="page in tasks.last_page"
-                        :key="page"
-                        :href="route('tasks.index', { page })"
+                    <Link v-for="page in tasks.last_page" :key="page" :href="route('tasks.index', { page })"
                         class="rounded-md px-3 py-2 text-sm"
-                        :class="page === tasks.current_page ? 'bg-orange-50 font-medium text-orange-600' : 'hover:bg-gray-50'"
-                    >
-                        {{ page }}
+                        :class="page === tasks.current_page ? 'bg-orange-50 font-medium text-orange-600' : 'hover:bg-gray-50'">
+                    {{ page }}
                     </Link>
                 </div>
             </div>

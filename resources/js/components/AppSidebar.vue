@@ -34,8 +34,8 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route('dashboard')" class="flex items-center gap-2">
-                            <img src="https://www.innovatotec.com/web/image/277-b178a65d/full%20logo.webp" alt="Innovato" class="h-8 w-auto" />
+                        <Link :href="route('dashboard')" class="flex gap-2 items-center">
+                            <img src="https://iits.website/logo.png" alt="Innovato" class="w-auto h-8" />
                             <span class="text-lg font-semibold text-orange-600"> Project Hub </span>
                         </Link>
                     </SidebarMenuButton>

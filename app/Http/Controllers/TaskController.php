@@ -81,7 +81,7 @@ class TaskController extends Controller
         }
 
         return redirect()
-            ->route('tasks.index')
+            ->route('projects.show', $task->project_id)
             ->with('flash', ['type' => 'success', 'message' => 'Task created successfully']);
     }
 

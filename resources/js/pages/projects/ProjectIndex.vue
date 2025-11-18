@@ -2,11 +2,12 @@
 import KanbanBoard from '@/components/KanbanBoard.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProjectStatus, ProjectStatusLabels } from '@/enums/ProjectStatus';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { CheckCircle2, ChevronUp, Clock, ListTodo, PlusCircle, TimerIcon } from 'lucide-vue-next';
-import { computed, defineProps } from 'vue';
+import { CheckCircle2, ChevronUp, Clock, ListTodo, PlusCircle, TimerIcon, LayoutGrid, Table as TableIcon, Calendar, User, Menu, X } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Project {
     id: number;
@@ -30,6 +31,10 @@ const breadcrumbs = [
     { title: 'Projects', href: '/projects' },
 ];
 
+// View mode state
+const viewMode = ref<'table' | 'kanban'>('table');
+const mobileMenuOpen = ref(false);
+
 // Group projects by status using computed properties
 const groupedProjects = computed(() => {
     const pending = (props.projects || []).filter((p) => p.status === ProjectStatus.Pending);
@@ -40,6 +45,7 @@ const groupedProjects = computed(() => {
         {
             id: 1,
             title: ProjectStatusLabels[ProjectStatus.Pending],
+            color: '#FBBF24',
             tasks: pending.map((p) => ({
                 id: p.id,
                 title: p.name,
@@ -53,6 +59,7 @@ const groupedProjects = computed(() => {
         {
             id: 2,
             title: ProjectStatusLabels[ProjectStatus.InProgress],
+            color: '#60A5FA',
             tasks: inProgress.map((p) => ({
                 id: p.id,
                 title: p.name,
@@ -66,6 +73,7 @@ const groupedProjects = computed(() => {
         {
             id: 3,
             title: ProjectStatusLabels[ProjectStatus.Completed],
+            color: '#34D399',
             tasks: completed.map((p) => ({
                 id: p.id,
                 title: p.name,
@@ -120,40 +128,119 @@ const getStatusColor = (status: string) => {
             return 'bg-gray-50 text-gray-700 border-gray-200';
     }
 };
+
+// Format date
+const formatDate = (date: string) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+
+// Calculate days until deadline
+const daysUntilDeadline = (endDate: string) => {
+    if (!endDate) return null;
+    const today = new Date();
+    const deadline = new Date(endDate);
+    const diffTime = deadline.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+};
+
+// Get deadline color
+const getDeadlineColor = (days: number | null) => {
+    if (days === null) return 'text-gray-500';
+    if (days < 0) return 'text-red-600 font-semibold';
+    if (days <= 3) return 'text-red-500';
+    if (days <= 7) return 'text-orange-500';
+    return 'text-green-500';
+};
 </script>
 
 <template>
+
     <Head title="Projects" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-8 p-6">
-            <!-- Header with Create Button -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Projects Overview</h1>
-                    <p class="mt-1 text-sm text-gray-500">Manage and track all your projects in one place</p>
+        <div class="w-full space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <!-- Header with Create Button and View Toggle -->
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1">
+                    <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">Projects Overview</h1>
+                    <p class="mt-1 text-xs text-gray-500 sm:text-sm">Manage and track all your projects in one place</p>
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                    <!-- Mobile Menu Button -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="sm:hidden flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2">
+                        <Menu v-if="!mobileMenuOpen" class="h-5 w-5" />
+                        <X v-else class="h-5 w-5" />
+                    </button>
+
+                    <!-- Desktop Controls -->
+                    <div class="hidden gap-4 sm:flex sm:items-center">
+                        <!-- View Toggle Buttons -->
+                        <div class="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+                            <Button :variant="viewMode === 'table' ? 'default' : 'ghost'" size="sm" class="gap-2"
+                                @click="viewMode = 'table'">
+                                <TableIcon class="h-4 w-4" />
+                                <span class="hidden md:inline">Table</span>
+                            </Button>
+                            <Button :variant="viewMode === 'kanban' ? 'default' : 'ghost'" size="sm" class="gap-2"
+                                @click="viewMode = 'kanban'">
+                                <LayoutGrid class="h-4 w-4" />
+                                <span class="hidden md:inline">Kanban</span>
+                            </Button>
+                        </div>
+                        <Link :href="route('projects.create')">
+                        <Button class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 whitespace-nowrap">
+                            <PlusCircle class="h-4 w-4" />
+                            <span class="hidden lg:inline">Create Project</span>
+                            <span class="lg:hidden">Create</span>
+                        </Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div v-show="mobileMenuOpen" class="sm:hidden space-y-2">
+                <div class="flex gap-2 rounded-lg border border-gray-300 bg-white p-1">
+                    <Button :variant="viewMode === 'table' ? 'default' : 'ghost'" size="sm" class="flex-1 gap-2"
+                        @click="viewMode = 'table'; mobileMenuOpen = false">
+                        <TableIcon class="h-4 w-4" />
+                        Table
+                    </Button>
+                    <Button :variant="viewMode === 'kanban' ? 'default' : 'ghost'" size="sm" class="flex-1 gap-2"
+                        @click="viewMode = 'kanban'; mobileMenuOpen = false">
+                        <LayoutGrid class="h-4 w-4" />
+                        Kanban
+                    </Button>
                 </div>
                 <Link :href="route('projects.create')">
-                    <Button class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90">
-                        <PlusCircle class="h-4 w-4" />
-                        Create Project
-                    </Button>
+                <Button class="w-full inline-flex items-center gap-2 bg-primary hover:bg-primary/90">
+                    <PlusCircle class="h-4 w-4" />
+                    Create Project
+                </Button>
                 </Link>
             </div>
 
             <!-- Project Summary Cards -->
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Card class="border-l-4 border-l-yellow-400">
                     <CardHeader class="pb-2">
-                        <div class="flex items-center justify-between">
-                            <CardTitle class="text-base font-medium text-gray-700">To Do</CardTitle>
-                            <ListTodo class="h-5 w-5 text-yellow-500" />
+                        <div class="flex items-center justify-between gap-2">
+                            <CardTitle class="text-sm font-medium text-gray-700 sm:text-base">To Do</CardTitle>
+                            <ListTodo class="h-4 w-4 text-yellow-500 sm:h-5 sm:w-5" />
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div class="flex items-baseline justify-between">
-                            <span class="text-3xl font-bold text-gray-900">{{ projectCounts.pending }}</span>
-                            <div class="flex items-center text-sm text-yellow-600">
-                                <ChevronUp class="h-4 w-4" />
+                            <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.pending
+                            }}</span>
+                            <div class="flex items-center gap-1 text-xs text-yellow-600 sm:text-sm">
+                                <ChevronUp class="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Pending</span>
                             </div>
                         </div>
@@ -162,33 +249,35 @@ const getStatusColor = (status: string) => {
 
                 <Card class="border-l-4 border-l-blue-400">
                     <CardHeader class="pb-2">
-                        <div class="flex items-center justify-between">
-                            <CardTitle class="text-base font-medium text-gray-700">In Progress</CardTitle>
-                            <TimerIcon class="h-5 w-5 text-blue-500" />
+                        <div class="flex items-center justify-between gap-2">
+                            <CardTitle class="text-sm font-medium text-gray-700 sm:text-base">In Progress</CardTitle>
+                            <TimerIcon class="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div class="flex items-baseline justify-between">
-                            <span class="text-3xl font-bold text-gray-900">{{ projectCounts.inProgress }}</span>
-                            <div class="flex items-center text-sm text-blue-600">
-                                <Clock class="h-4 w-4" />
+                            <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.inProgress
+                            }}</span>
+                            <div class="flex items-center gap-1 text-xs text-blue-600 sm:text-sm">
+                                <Clock class="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Active</span>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card class="border-l-4 border-l-green-400">
+                <Card class="border-l-4 border-l-green-400 sm:col-span-2 lg:col-span-1">
                     <CardHeader class="pb-2">
-                        <div class="flex items-center justify-between">
-                            <CardTitle class="text-base font-medium text-gray-700">Completed</CardTitle>
-                            <CheckCircle2 class="h-5 w-5 text-green-500" />
+                        <div class="flex items-center justify-between gap-2">
+                            <CardTitle class="text-sm font-medium text-gray-700 sm:text-base">Completed</CardTitle>
+                            <CheckCircle2 class="h-4 w-4 text-green-500 sm:h-5 sm:w-5" />
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div class="flex items-baseline justify-between">
-                            <span class="text-3xl font-bold text-gray-900">{{ projectCounts.completed }}</span>
-                            <div class="flex items-center text-sm text-green-600">
+                            <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.completed
+                            }}</span>
+                            <div class="text-xs text-green-600 sm:text-sm">
                                 <span>Done</span>
                             </div>
                         </div>
@@ -196,25 +285,145 @@ const getStatusColor = (status: string) => {
                 </Card>
             </div>
 
-            <!-- Kanban Board Section -->
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Project Board</h2>
-                    <div class="text-sm text-gray-500">{{ props.projects.length }} total projects</div>
+            <!-- Table View -->
+            <div v-show="viewMode === 'table'" class="space-y-4">
+                <div class="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <h2 class="text-lg font-semibold text-gray-900">All Projects</h2>
+                    <div class="text-xs text-gray-500 sm:text-sm">{{ props.projects.length }} total projects</div>
                 </div>
 
-                <KanbanBoard :columns="groupedProjects" type="project" @item-moved="updateProjectStatus" class="min-h-[600px]" />
+                <Card class="overflow-hidden">
+                    <CardContent class="p-0">
+                        <div class="overflow-x-auto">
+                            <Table>
+
+
+                                <TableHead class="min-w-[200px] sm:min-w-[250px]">Project Name</TableHead>
+                                <TableHead class="min-w-[120px]">Status</TableHead>
+                                <TableHead class="min-w-[100px] hidden sm:table-cell">Assignee</TableHead>
+                                <TableHead class="min-w-[100px] hidden md:table-cell">Start Date</TableHead>
+                                <TableHead class="min-w-[100px] hidden lg:table-cell">End Date</TableHead>
+                                <TableHead class="min-w-[80px]">Days</TableHead>
+                                <TableHead class="min-w-[80px] text-right">Actions</TableHead>
+
+
+                                <TableBody>
+                                    <TableRow v-for="project in props.projects" :key="project.id"
+                                        class="hover:bg-gray-50">
+                                        <TableCell class="max-w-xs">
+                                            <Link :href="route('projects.show', project.id)"
+                                                class="font-medium text-primary hover:underline truncate block">
+                                            {{ project.name }}
+                                            </Link>
+                                            <p v-if="project.description" class="text-xs text-gray-500 line-clamp-1"
+                                                v-html="project.description">
+                                            </p>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border ${getStatusColor(project.status)}`">
+                                                {{ project.status }}
+                                            </span>
+                                        </TableCell>
+
+
+                                        <TableCell class="hidden sm:table-cell">
+                                            <div v-if="project.assignee" class="flex items-center gap-2">
+                                                <div
+                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs">
+                                                    <span class="font-medium text-orange-700">
+                                                        {{ project.assignee.name.charAt(0).toUpperCase() }}
+                                                    </span>
+                                                </div>
+                                                <span class="text-xs sm:text-sm">{{ project.assignee.name }}</span>
+                                            </div>
+                                            <span v-else class="text-xs text-gray-500">-</span>
+                                        </TableCell>
+                                        <TableCell class="hidden md:table-cell">
+                                            <div class="flex items-center gap-1 text-xs text-gray-600">
+                                                <Calendar class="h-3 w-3" />
+                                                {{ formatDate(project.start_date) }}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell class="hidden lg:table-cell">
+                                            <div class="flex items-center gap-1 text-xs text-gray-600">
+                                                <Calendar class="h-3 w-3" />
+                                                {{ formatDate(project.end_date) }}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                :class="`text-xs font-medium ${getDeadlineColor(daysUntilDeadline(project.end_date))}`">
+                                                {{ daysUntilDeadline(project.end_date) !== null ?
+                                                    `${daysUntilDeadline(project.end_date)}d` : '-' }}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell class="text-right">
+                                            <Link :href="route('projects.show', project.id)">
+                                            <Button variant="outline" size="sm" class="text-xs">View</Button>
+                                            </Link>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-if="props.projects.length === 0"
+                            class="flex h-48 flex-col items-center justify-center px-4 sm:h-64">
+                            <ListTodo class="mb-4 h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+                            <p class="text-sm text-gray-500">No projects yet</p>
+                            <Link :href="route('projects.create')">
+                            <Button variant="outline" class="mt-4">Create your first project</Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <!-- Kanban View -->
+            <div v-show="viewMode === 'kanban'" class="space-y-4">
+                <div class="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <h2 class="text-lg font-semibold text-gray-900">Project Board</h2>
+                    <div class="text-xs text-gray-500 sm:text-sm">{{ props.projects.length }} total projects</div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <KanbanBoard :columns="groupedProjects" type="project" @item-moved="updateProjectStatus"
+                        class="min-h-[600px]" />
+                </div>
             </div>
         </div>
     </AppLayout>
 </template>
 
-<style>
+<style scoped>
 .kanban-column {
     @apply rounded-lg bg-gray-50 p-4;
 }
 
 .kanban-card {
     @apply mb-3 cursor-move rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md;
+}
+
+/* Line clamp for description */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    :deep(.table) {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 768px) {
+    :deep(.table) {
+        font-size: 0.8125rem;
+    }
 }
 </style>

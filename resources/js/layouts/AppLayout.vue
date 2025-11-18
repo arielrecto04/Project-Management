@@ -19,37 +19,34 @@ const flash = computed(() => usePage().props.flash);
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <!-- Flash Message -->
-        <div
-            v-if="flash?.message"
-            :class="{
-                'mb-4 rounded-lg p-4 shadow-sm transition-all': true,
+        <Transition name="fade">
+            <div v-if="flash?.message" :class="{
+                'mb-4 rounded-lg p-3 shadow-sm transition-all duration-300 sm:p-4': true,
                 'border border-orange-200 bg-orange-50 text-orange-700': flash?.type === 'success',
                 'border border-red-200 bg-red-50 text-red-700': flash?.type === 'error',
-            }"
-        >
-            <div class="flex items-center gap-3">
-                <CheckCircleIcon v-if="flash?.type === 'success'" class="h-5 w-5" />
-                <XCircleIcon v-if="flash?.type === 'error'" class="h-5 w-5" />
-                <p class="text-sm font-medium">{{ flash?.message }}</p>
+            }" role="alert">
+                <div class="flex items-start gap-2 sm:items-center sm:gap-3">
+                    <CheckCircleIcon v-if="flash?.type === 'success'" class="h-5 w-5 flex-shrink-0" />
+                    <XCircleIcon v-if="flash?.type === 'error'" class="h-5 w-5 flex-shrink-0" />
+                    <p class="text-sm font-medium sm:text-base">{{ flash?.message }}</p>
+                </div>
             </div>
-        </div>
+        </Transition>
 
         <!-- Main Content -->
-        <div class="flex-1 space-y-6 p-6">
+        <div class="flex-1 space-y-4 p-4 sm:space-y-6 sm:p-6">
             <slot />
         </div>
 
         <!-- Footer -->
-        <footer class="mt-auto border-t border-gray-200 bg-white py-4">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between">
-                    <p class="text-sm text-gray-500">&copy; {{ new Date().getFullYear() }} Innovato. All rights reserved.</p>
-                    <a
-                        href="https://www.innovatotec.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-sm text-orange-600 hover:text-orange-700"
-                    >
+        <footer class="mt-auto border-t border-gray-200 bg-white py-3 sm:py-4">
+            <div class="mx-auto w-full max-w-full px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col items-center justify-between gap-3 sm:flex-row sm:gap-4">
+                    <p class="text-center text-xs text-gray-500 sm:text-left sm:text-sm">
+                        &copy; {{ new Date().getFullYear() }} Innovato. All rights reserved.
+                    </p>
+                    <a href="https://www.innovatotec.com" target="_blank" rel="noopener noreferrer"
+                        class="text-xs text-orange-600 hover:text-orange-700 hover:underline sm:text-sm">
                         Visit Innovato
                     </a>
                 </div>
@@ -67,5 +64,12 @@ const flash = computed(() => usePage().props.flash);
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+    :deep(.container) {
+        padding: 0;
+    }
 }
 </style>
