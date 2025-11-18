@@ -30,6 +30,8 @@
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
         "@inertiajs/vue3": "^2.0.0-beta.3",
+        "@unovis/ts": "^1.6.2",
+        "@unovis/vue": "^1.6.2",
         "@vitejs/plugin-vue": "^5.2.1",
         "@vueup/vue-quill": "^1.2.0",
         "@vueuse/core": "^12.8.2",

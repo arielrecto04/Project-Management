@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { CheckCircleIcon, ClipboardDocumentListIcon, ClockIcon, UsersIcon } from '@heroicons/vue/24/outline';
 import { Head } from '@inertiajs/vue3';
+import AreaChart from '@/components/charts/AreaChart.vue';
 
 interface DashboardStats {
     totalProjects: number;
@@ -66,20 +67,21 @@ const statsCards = [
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex flex-col flex-1 gap-6 p-6 h-full">
             <!-- Stats Grid -->
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <Card v-for="stat in statsCards" :key="stat.title" class="relative overflow-hidden">
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card v-for="stat in statsCards" :key="stat.title" class="overflow-hidden relative">
+                    <CardHeader class="flex flex-row justify-between items-center pb-2 space-y-0">
                         <CardTitle class="text-sm font-medium">{{ stat.title }}</CardTitle>
-                        <component :is="stat.icon" class="h-4 w-4 text-gray-500" />
+                        <component :is="stat.icon" class="w-4 h-4 text-gray-500" />
                     </CardHeader>
                     <CardContent>
                         <div class="text-2xl font-bold">{{ stat.value }}</div>
                     </CardContent>
-                    <div class="absolute bottom-0 left-0 h-1 w-full" :class="stat.color" />
+                    <div class="absolute bottom-0 left-0 w-full h-1" :class="stat.color" />
                 </Card>
             </div>
+            <AreaChart  />
 
             <div class="grid gap-6 md:grid-cols-2">
                 <!-- Project Status Chart -->
@@ -91,13 +93,13 @@ const statsCards = [
                         <div class="space-y-4">
                             <div v-for="status in stats.projectsByStatus" :key="status.name" class="flex items-center">
                                 <div class="w-full">
-                                    <div class="mb-1 flex items-center justify-between">
+                                    <div class="flex justify-between items-center mb-1">
                                         <span class="text-sm font-medium">{{ status.name }}</span>
                                         <span class="text-sm text-gray-500">{{ status.count }}</span>
                                     </div>
-                                    <div class="h-2 w-full rounded-full bg-gray-100">
+                                    <div class="w-full h-2 bg-gray-100 rounded-full">
                                         <div
-                                            class="h-2 rounded-full bg-orange-500"
+                                            class="h-2 bg-orange-500 rounded-full"
                                             :style="`width: ${(status.count / stats.totalProjects) * 100}%`"
                                         />
                                     </div>

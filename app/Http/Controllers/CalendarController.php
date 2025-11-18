@@ -10,8 +10,8 @@ class CalendarController extends Controller
 {
     public function index()
     {
-        $projects = Project::select(['id', 'name', 'start_date', 'end_date', 'status'])->get();
-        $tasks = Task::select(['id', 'name', 'start_date', 'end_date', 'status'])->get();
+        $projects = Project::all();
+        $tasks = Task::all();
 
         return Inertia::render('Calendar', [
             'projects' => $projects,
