@@ -1,13 +1,11 @@
-import { NavItem } from "@/types";
-import { LayoutGrid, BookA, Activity, Calendar1, BabyIcon } from "lucide-vue-next";
+import { NavItem } from '@/types';
+import { Activity, BabyIcon, BookA, Calendar1, LayoutGrid } from 'lucide-vue-next';
 
-
-export const SideBarMainItems : NavItem[] = [
+export const SideBarMainItems: NavItem[] = [
     {
-        title: 'dashboard',
+        title: 'Dashboard',
         href: route('dashboard'),
         icon: LayoutGrid,
-
     },
     {
         title: 'Projects',
@@ -17,16 +15,16 @@ export const SideBarMainItems : NavItem[] = [
     {
         title: 'Tasks',
         href: route('tasks.index'),
-        icon: Activity
+        icon: Activity,
     },
     {
         title: 'Calendar',
         href: route('calendar.index'),
-        icon: Calendar1
+        icon: Calendar1,
     },
     {
         title: 'Users',
         href: route('users.index'),
-        icon: BabyIcon
-    }
+        icon: BabyIcon,
+    },
 ];

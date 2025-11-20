@@ -113,29 +113,29 @@ const timelineEvents = computed(() => {
                 // Task Status Events (for completed tasks)
                 task.status === ProjectStatus.Completed
                     ? {
-                          date: new Date(task.updated_at),
-                          type: 'task_completed',
-                          title: `Task Completed: ${task.name}`,
-                          icon: Check,
-                          iconClass: 'text-green-500',
-                          bgClass: 'bg-green-50',
-                          borderClass: 'border-green-200',
-                          taskId: task.id,
-                      }
+                        date: new Date(task.updated_at),
+                        type: 'task_completed',
+                        title: `Task Completed: ${task.name}`,
+                        icon: Check,
+                        iconClass: 'text-green-500',
+                        bgClass: 'bg-green-50',
+                        borderClass: 'border-green-200',
+                        taskId: task.id,
+                    }
                     : null,
             ])
             .filter(Boolean),
         // Project End Date (if set and not in the future)
         props.project.end_date && new Date(props.project.end_date) <= new Date()
             ? {
-                  date: new Date(props.project.end_date),
-                  type: 'project_ended',
-                  title: 'Project Ended',
-                  icon: Check,
-                  iconClass: 'text-green-500',
-                  bgClass: 'bg-green-50',
-                  borderClass: 'border-green-200',
-              }
+                date: new Date(props.project.end_date),
+                type: 'project_ended',
+                title: 'Project Ended',
+                icon: Check,
+                iconClass: 'text-green-500',
+                bgClass: 'bg-green-50',
+                borderClass: 'border-green-200',
+            }
             : null,
     ].filter(Boolean);
 
@@ -166,6 +166,7 @@ const formatDate = (date: Date) => {
 </script>
 
 <template>
+
     <Head :title="`${project.name} - Timeline`" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="mx-auto max-w-5xl space-y-6 p-6">
@@ -175,13 +176,13 @@ const formatDate = (date: Date) => {
                     <div class="flex items-center justify-between">
                         <div>
                             <CardTitle class="text-2xl">Project Timeline</CardTitle>
-                            <p class="mt-1 text-sm text-gray-500">Track the progress of {{ project.name }}</p>
+                            <p class="mt-1 text-sm text-gray-500">Track the progress of {{ project?.name }}</p>
                         </div>
                         <div class="flex items-center space-x-2 text-sm text-gray-500">
                             <Calendar class="h-4 w-4" />
-                            <span>{{ formatDate(new Date(project.start_date)) }}</span>
+                            <span>{{ formatDate(new Date(project?.start_date)) }}</span>
                             <span>-</span>
-                            <span>{{ formatDate(new Date(project.end_date)) }}</span>
+                            <span>{{ formatDate(new Date(project?.end_date)) }}</span>
                         </div>
                     </div>
                 </CardHeader>
@@ -198,32 +199,25 @@ const formatDate = (date: Date) => {
                         <div class="space-y-8">
                             <div v-for="(event, index) in timelineEvents" :key="index" class="relative ml-10">
                                 <!-- Event Circle -->
-                                <div
-                                    class="absolute -left-14 mt-1.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white shadow-md"
-                                    :class="[event.bgClass || event.bgColor]"
-                                >
+                                <div class="absolute -left-14 mt-1.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white shadow-md"
+                                    :class="[event.bgClass || event.bgColor]">
                                     <component :is="event.icon" :class="[event.iconClass || event.color, 'h-4 w-4']" />
                                 </div>
 
                                 <!-- Event Content -->
-                                <div
-                                    class="flex flex-col rounded-lg border bg-white p-4 shadow-sm"
-                                    :class="event.type.startsWith('task_') ? event.borderColor : event.borderClass"
-                                >
+                                <div class="flex flex-col rounded-lg border bg-white p-4 shadow-sm"
+                                    :class="event.type.startsWith('task_') ? event.borderColor : event.borderClass">
                                     <div class="flex items-center justify-between">
                                         <div class="space-y-1">
                                             <h3 class="font-medium text-gray-900">{{ event.title }}</h3>
                                             <div v-if="event.type === 'task_created'" class="flex items-center gap-2">
                                                 <span
                                                     class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                                                    :class="[event.bgColor, event.color]"
-                                                >
+                                                    :class="[event.bgColor, event.color]">
                                                     {{ event.status.replace('_', ' ') }}
                                                 </span>
-                                                <span
-                                                    v-if="event.dueDate && isOverdue(event.dueDate)"
-                                                    class="inline-flex items-center gap-1 text-xs text-red-600"
-                                                >
+                                                <span v-if="event.dueDate && isOverdue(event.dueDate)"
+                                                    class="inline-flex items-center gap-1 text-xs text-red-600">
                                                     <AlertCircle class="h-3 w-3" />
                                                     Overdue
                                                 </span>
@@ -252,10 +246,10 @@ const formatDate = (date: Date) => {
                                                 event.type === 'project_created'
                                                     ? 'Project timeline started'
                                                     : event.type === 'project_started'
-                                                      ? 'Project work began'
-                                                      : event.type === 'project_ended'
-                                                        ? 'Project completed'
-                                                        : ''
+                                                        ? 'Project work began'
+                                                        : event.type === 'project_ended'
+                                                            ? 'Project completed'
+                                                            : ''
                                             }}
                                         </p>
                                     </div>
