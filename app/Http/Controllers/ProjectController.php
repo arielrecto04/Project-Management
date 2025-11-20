@@ -78,10 +78,6 @@ class ProjectController extends Controller
         ]);
 
 
-
-
-
-
         return Inertia::render('projects/ProjectShow', [
             'project' => $project
         ]);

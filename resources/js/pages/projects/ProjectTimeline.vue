@@ -104,7 +104,7 @@ const timelineEvents = computed(() => {
                     date: new Date(task.created_at),
                     type: 'task_created',
                     title: `Task Created: ${task.name}`,
-                    description: `Assigned to ${task.assignee_to.name}`,
+                    description: `Assigned to ${task.assignee_to?.name}`,
                     status: task.status,
                     dueDate: new Date(task.due_date),
                     taskId: task.id,
