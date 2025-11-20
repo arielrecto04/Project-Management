@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 use App\Notifications\TaskAssigned;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Response;
+use App\Models\Comment; // if you have a Comment model
 
 class TaskController extends Controller
 {
@@ -168,6 +170,134 @@ class TaskController extends Controller
         return back()->with('flash', [
             'type' => 'success',
             'message' => 'Task status updated successfully'
+        ]);
+    }
+
+
+    public function addComment(Request $request, Task $task)
+    {
+
+        $validated = $request->validate([
+            'body' => 'required|string|max:1000',
+        ]);
+
+        $task->comments()->create([
+            'user_id' => Auth::id(),
+            'body' => $validated['body'],
+        ]);
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Comment added successfully'
+        ]);
+    }
+
+    /**
+     * Update a comment on the given task.
+     *
+     * Only the comment owner may update their comment.
+     */
+    public function updateComment(Request $request, Task $task, $commentId)
+    {
+        $validated = $request->validate([
+            'body' => 'required|string|max:1000',
+        ]);
+
+        $comment = $task->comments()->where('id', $commentId)->firstOrFail();
+
+        if ($comment->user_id !== Auth::id()) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'You are not authorized to update this comment.',
+            ])->setStatusCode(Response::HTTP_FORBIDDEN);
+        }
+
+        $comment->update([
+            'body' => $validated['body'],
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Comment updated successfully.',
+        ]);
+    }
+
+    /**
+     * Delete a comment from the given task.
+     *
+     * Only the comment owner may delete their comment.
+     */
+    public function deleteComment(Request $request, Task $task, $commentId)
+    {
+        $comment = $task->comments()->where('id', $commentId)->firstOrFail();
+
+        if ($comment->user_id !== Auth::id()) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'You are not authorized to delete this comment.',
+            ])->setStatusCode(Response::HTTP_FORBIDDEN);
+        }
+
+        $comment->delete();
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Comment deleted successfully.',
+        ]);
+    }
+
+    /**
+     * Assign or change assignee for a task.
+     *
+     * Expects 'assignee_id' in request. Returns JSON with updated task->assignee.
+     */
+    public function assignUser(Request $request, Task $task)
+    {
+        $validated = $request->validate([
+            'assignee_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        // authorization: ensure current user may assign (adjust policy as needed)
+        // example: only project owner or task creator can assign — customize per app rules
+        if (!Auth::user()) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = User::findOrFail($validated['assignee_id']);
+
+        // persist assignment
+        // assume Task has assignee_id column or relation 'assignee'
+
+        $task->update([
+            'assignee_to' => $user->id,
+        ]);
+
+        // eager load assignee relation if exists
+        if (method_exists($task, 'assignee')) {
+            $task->load('assignee');
+        }
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Task assigned successfully'
+        ]);
+    }
+
+    public function removeAssignUser(Request $request, Task $task)
+    {
+        // authorization: ensure current user may unassign (adjust policy as needed)
+        if (!Auth::user()) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // remove assignment
+        $task->update([
+            'assignee_to' => null,
+        ]);
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Task unassigned successfully'
         ]);
     }
 }

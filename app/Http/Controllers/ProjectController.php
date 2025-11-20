@@ -70,8 +70,11 @@ class ProjectController extends Controller
             'assignee',
             'createdBy',
             'tasks.assigneeTo',
-            'attachments.user' // Add this to load attachments with their uploaders
+            'attachments.user',
+            'tasks.comments.user' // Add this to load comments with their authors
         ]);
+
+
 
         return Inertia::render('projects/ProjectShow', [
             'project' => $project

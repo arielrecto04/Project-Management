@@ -40,4 +40,13 @@ class UserController extends Controller
             'user' => $user
         ]);
     }
+
+    public function search($term)
+    {
+        $users = User::where('name', 'like', '%' . $term . '%')
+            ->orWhere('email', 'like', '%' . $term . '%')
+            ->get();
+
+        return response()->json($users);
+    }
 }
