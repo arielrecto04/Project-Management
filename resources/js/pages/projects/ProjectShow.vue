@@ -85,8 +85,43 @@ const mobileMenuOpen = ref(false);
 const drawerOpen = ref(false);
 const selectedTask = ref<Task | null>(null);
 
-const page = usePage();
-const currentUser = (page.props as any).auth?.user || null;
+// --- Share modal state & helpers ---
+const shareModalOpen = ref(false);
+const shareCopied = ref(false);
+const projectShareLink = computed(() => {
+    // prefer named route helper if available, fallback to current location
+    try {
+        // route() comes from Ziggy / Inertia helpers
+        return typeof route === 'function' ? route('projects.show', props.project.id) : window.location.href;
+    } catch {
+        return window.location.href;
+    }
+});
+
+const openShareModal = () => {
+    shareCopied.value = false;
+    shareModalOpen.value = true;
+};
+
+const closeShareModal = () => {
+    shareModalOpen.value = false;
+};
+
+const copyShareLink = async () => {
+    try {
+        await navigator.clipboard.writeText(projectShareLink.value);
+        shareCopied.value = true;
+    } catch (err) {
+        console.error('Copy failed', err);
+        // fallback: select and prompt
+        const fallbackInput = document.getElementById('project-share-link') as HTMLInputElement | null;
+        if (fallbackInput) {
+            fallbackInput.select();
+            document.execCommand('copy');
+            shareCopied.value = true;
+        }
+    }
+};
 
 // comment edit/delete state
 const editingCommentId = ref<number | null>(null);
@@ -435,9 +470,12 @@ const selectAssignee = (user: { id: number, name: string }) => {
 
                 <!-- Desktop Action Buttons -->
                 <div class="hidden flex-col gap-2 sm:flex sm:flex-row sm:gap-3">
-                    <Button variant="outline" :href="route('projects.edit', project.id)" size="sm"
-                        class="text-xs sm:text-sm"> Edit Project </Button>
-                    <Button variant="default" size="sm" class="text-xs sm:text-sm"> Share </Button>
+                    <Link :href="route('projects.edit', project.id)" size="sm"
+                        class="text-xs sm:text-sm border-2 border-gray-200 rounded-lg p-2">
+                    Edit Project </Link>
+                    <Button variant="default" size="sm" class="text-xs sm:text-sm" @click="openShareModal">
+                        Share
+                    </Button>
                     <Link :href="route('projects.timeline', project.id)">
                     <Button variant="outline" size="sm" class="text-xs sm:text-sm">View Timeline</Button>
                     </Link>
@@ -448,7 +486,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
             <div v-show="mobileMenuOpen" class="space-y-2 sm:hidden">
                 <Button variant="outline" :href="route('projects.edit', project.id)" class="justify-start w-full"> Edit
                     Project </Button>
-                <Button variant="default" class="justify-start w-full"> Share </Button>
+                <Button variant="default" class="justify-start w-full" @click="openShareModal"> Share </Button>
                 <Link :href="route('projects.timeline', project.id)">
                 <Button variant="outline" class="justify-start w-full">View Timeline</Button>
                 </Link>
@@ -511,7 +549,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                             <div>
                                 <p class="text-xs text-gray-500">End Date</p>
                                 <p class="text-xs font-medium text-gray-900 sm:text-sm">{{ project.end_date || 'Not set'
-                                    }}</p>
+                                }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -642,7 +680,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                                                     {{ selectedTask.assignee.name.charAt(0) }}
                                                                 </span>
                                                                 <span class="text-sm">{{ selectedTask.assignee.name
-                                                                    }}</span>
+                                                                }}</span>
                                                                 <Link
                                                                     :href="route('tasks.remove-assign', selectedTask.id)"
                                                                     method="put" variant="ghost" size="sm">
@@ -962,7 +1000,47 @@ const selectAssignee = (user: { id: number, name: string }) => {
             </Card>
         </div>
     </AppLayout>
+
+    <div v-if="shareModalOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40" @click="closeShareModal" aria-hidden="true"></div>
+        <div class="relative w-full max-w-lg mx-4 bg-white rounded-lg shadow-lg border overflow-hidden" role="dialog"
+            aria-modal="true" aria-label="Share project link">
+            <header class="flex items-center justify-between px-4 py-3 border-b">
+                <h3 class="text-sm font-semibold text-gray-900">Share project</h3>
+                <button class="text-gray-500 hover:text-gray-700" @click="closeShareModal" aria-label="Close">
+                    <X class="w-5 h-5" />
+                </button>
+            </header>
+
+            <div class="p-4">
+                <p class="text-xs text-gray-600 mb-3">Anyone with this link can view the project.</p>
+
+                <label class="sr-only" for="project-share-link">Project link</label>
+                <div class="flex gap-2 items-center">
+                    <input id="project-share-link" type="text" readonly :value="projectShareLink"
+                        class="flex-1 px-3 py-2 text-sm rounded border border-gray-200 bg-gray-50" />
+                    <button @click="copyShareLink"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">
+                        <span v-if="!shareCopied">Copy link</span>
+                        <span v-else>Copied</span>
+                    </button>
+                </div>
+
+                <p v-if="shareCopied" class="mt-3 text-xs text-green-600">Link copied to clipboard.</p>
+
+                <p class="mt-4 text-xs text-gray-500">Tip: You can paste this link into email or chat to share.</p>
+            </div>
+
+            <footer class="flex justify-end gap-2 px-4 py-3 border-t">
+                <Button variant="outline" size="sm" @click="closeShareModal">Close</Button>
+                <Button size="sm" @click="copyShareLink">{{ shareCopied ? 'Copied' : 'Copy link' }}</Button>
+            </footer>
+        </div>
+    </div>
+
 </template>
+
+<!-- Share Modal -->
 
 <style scoped>
 .prose h1 {

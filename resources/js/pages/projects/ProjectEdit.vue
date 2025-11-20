@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, Link } from '@inertiajs/vue3';
 
 const props = defineProps<{
     project: {
@@ -40,6 +40,7 @@ const submit = () => {
 </script>
 
 <template>
+
     <Head title="Edit Project" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-4">
@@ -79,7 +80,8 @@ const submit = () => {
                         </div>
                     </CardContent>
                     <CardFooter class="flex justify-end space-x-2">
-                        <Button variant="outline" :href="route('projects.index')">Cancel</Button>
+                        <Link :href="route('projects.show', props.project.id)"
+                            class="sm:text-sm border-2 border-gray-200 rounded-lg p-2">Cancel</Link>
                         <Button type="submit" :disabled="form.processing">Update Project</Button>
                     </CardFooter>
                 </form>
