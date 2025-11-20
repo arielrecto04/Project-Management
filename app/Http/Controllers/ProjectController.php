@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use PhpParser\Node\Stmt\TryCatch;
 
 class ProjectController extends Controller
 {
@@ -66,6 +67,8 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+
+
         $project->load([
             'assignee',
             'createdBy',
@@ -73,6 +76,9 @@ class ProjectController extends Controller
             'attachments.user',
             'tasks.comments.user' // Add this to load comments with their authors
         ]);
+
+
+
 
 
 

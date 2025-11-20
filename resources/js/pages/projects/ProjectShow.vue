@@ -156,7 +156,7 @@ const groupedTasks = computed(() => {
     const pending = props.project.tasks?.filter((t) => t.status === ProjectStatus.Pending) || [];
     const inProgress = props.project.tasks?.filter((t) => t.status === ProjectStatus.InProgress) || [];
     const completed = props.project.tasks?.filter((t) => t.status === ProjectStatus.Completed) || [];
-
+    console.log(pending, inProgress, completed);
     return [
         {
             id: 1,
@@ -166,7 +166,7 @@ const groupedTasks = computed(() => {
                 title: t.name,
                 status: t.status,
                 description: t.description,
-                assignee: t.assignee?.name,
+                assignee: t.assignee_to,
                 end_date: t.due_date,
                 created_at: t.created_at,
                 updated_at: t.updated_at,
@@ -181,7 +181,7 @@ const groupedTasks = computed(() => {
                 title: t.name,
                 status: t.status,
                 description: t.description,
-                assignee: t.assignee?.name,
+                assignee: t.assignee_to,
                 end_date: t.due_date,
                 created_at: t.created_at,
                 updated_at: t.updated_at,
@@ -196,7 +196,7 @@ const groupedTasks = computed(() => {
                 title: t.name,
                 status: t.status,
                 description: t.description,
-                assignee: t.assignee?.name,
+                assignee: t.assignee_to,
                 end_date: t.due_date,
                 created_at: t.created_at,
                 updated_at: t.updated_at,
@@ -511,7 +511,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                             <div>
                                 <p class="text-xs text-gray-500">End Date</p>
                                 <p class="text-xs font-medium text-gray-900 sm:text-sm">{{ project.end_date || 'Not set'
-                                }}</p>
+                                    }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -544,6 +544,60 @@ const selectAssignee = (user: { id: number, name: string }) => {
                 <div class="overflow-x-auto">
                     <KanbanBoard :columns="groupedTasks" type="task" @item-moved="updateTaskStatus"
                         class="min-h-[500px]">
+
+
+                        <template #card-header="{ item }">
+
+
+                            <div class="flex justify-between items-start gap-3 mb-3">
+                                <h3 class="text-sm font-semibold text-gray-900 leading-tight flex-1 line-clamp-2">
+                                    {{ item.title }}
+                                </h3>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full whitespace-nowrap flex-shrink-0 shadow-sm"
+                                    :class="getStatusColor(item.status)">
+                                    {{ ProjectStatusLabels[item.status as ProjectStatus] }}
+                                </span>
+                            </div>
+                        </template>
+
+                        <template #card-content="{ item }">
+                            <div class="space-y-3">
+                                <!-- Description -->
+                                <p v-if="item.description" class="text-sm text-gray-600 line-clamp-3 leading-relaxed">
+                                    <span v-html="item.description"></span>
+                                </p>
+
+                                <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
+                                    <!-- Due Date -->
+                                    <div v-if="item.end_date" class="flex items-center gap-2 text-xs text-gray-500">
+                                        <Calendar class="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span class="font-medium">Due:</span>
+                                        <span>{{ new Date(item.end_date).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric', year: 'numeric'
+                                        }) }}</span>
+                                    </div>
+
+                                    <!-- Assignee -->
+                                    <div v-if="item.assignee" class="flex items-center gap-2">
+                                        <div
+                                            class="flex justify-center items-center w-7 h-7 text-xs font-semibold text-orange-700 bg-gradient-to-br from-orange-50 to-orange-100 rounded-full ring-2 ring-orange-200 ring-offset-1">
+                                            {{ item.assignee.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs text-gray-500 font-medium">Assigned to</span>
+                                            <span class="text-sm text-gray-700 font-medium">{{ item.assignee.name
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                    <div v-else class="flex items-center gap-2 text-xs text-gray-400">
+                                        <User class="w-3.5 h-3.5" />
+                                        <span>Unassigned</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                         <template #actions="{ item }">
                             <Drawer>
                                 <DrawerTrigger as-child @click="openTaskDrawer(item)">
@@ -654,12 +708,15 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                                             Due date</h4>
                                                         <div class="mt-2 space-y-1">
                                                             <div class="text-sm"><span class="text-gray-600">Start:
-                                                                    {{ selectedTask.created_at }}</span>
+                                                                    {{ new
+                                                                        Date(selectedTask.created_at).toLocaleDateString()
+                                                                    }}</span>
 
                                                             </div>
                                                             <div class="text-sm">
                                                                 <span class="text-gray-600">Due:</span> {{
-                                                                    selectedTask.end_date || 'Not set' }}
+                                                                    new Date(selectedTask.end_date).toLocaleDateString() ||
+                                                                    'Not set' }}
                                                             </div>
                                                         </div>
                                                     </div>
