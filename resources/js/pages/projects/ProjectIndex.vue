@@ -157,6 +157,17 @@ const getDeadlineColor = (days: number | null) => {
     if (days <= 7) return 'text-orange-500';
     return 'text-green-500';
 };
+
+// status options for select
+const statusOptions = [ProjectStatus.Pending, ProjectStatus.InProgress, ProjectStatus.Completed] as string[];
+
+/**
+ * Change project status via API.
+ * Uses existing updateProjectStatus helper to perform the PUT request.
+ */
+const changeProjectStatus = (projectId: number, newStatus: string) => {
+    updateProjectStatus({ itemId: projectId, newStatus });
+};
 </script>
 
 <template>
@@ -238,7 +249,7 @@ const getDeadlineColor = (days: number | null) => {
                     <CardContent>
                         <div class="flex items-baseline justify-between">
                             <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.pending
-                            }}</span>
+                                }}</span>
                             <div class="flex items-center gap-1 text-xs text-yellow-600 sm:text-sm">
                                 <ChevronUp class="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Pending</span>
@@ -257,7 +268,7 @@ const getDeadlineColor = (days: number | null) => {
                     <CardContent>
                         <div class="flex items-baseline justify-between">
                             <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.inProgress
-                            }}</span>
+                                }}</span>
                             <div class="flex items-center gap-1 text-xs text-blue-600 sm:text-sm">
                                 <Clock class="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Active</span>
@@ -276,7 +287,7 @@ const getDeadlineColor = (days: number | null) => {
                     <CardContent>
                         <div class="flex items-baseline justify-between">
                             <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.completed
-                            }}</span>
+                                }}</span>
                             <div class="text-xs text-green-600 sm:text-sm">
                                 <span>Done</span>
                             </div>
@@ -320,10 +331,24 @@ const getDeadlineColor = (days: number | null) => {
                                             </p>
                                         </TableCell>
                                         <TableCell>
-                                            <span
-                                                :class="`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border ${getStatusColor(project.status)}`">
-                                                {{ project.status }}
-                                            </span>
+                                            <div class="relative inline-block">
+                                                <select :value="project.status"
+                                                    @change="changeProjectStatus(project.id, $event.target.value)"
+                                                    class="block w-full text-xs rounded-md border px-2 py-1 bg-white"
+                                                    aria-label="Change project status">
+                                                    <option v-for="s in statusOptions" :key="s" :value="s">
+                                                        {{ ProjectStatusLabels[s as keyof typeof ProjectStatusLabels] ??
+                                                            s }}
+                                                    </option>
+                                                </select>
+                                                <!-- visual pill overlay for status color (non-interactive) -->
+                                                <span
+                                                    class="pointer-events-none absolute inset-0 flex items-center justify-center text-xs px-2 py-0.5 rounded"
+                                                    :class="getStatusColor(project.status)">
+                                                    {{ ProjectStatusLabels[project.status as keyof typeof
+                                                        ProjectStatusLabels] ?? project.status }}
+                                                </span>
+                                            </div>
                                         </TableCell>
 
 
