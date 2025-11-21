@@ -8,6 +8,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ProjectAttachmentController;
 
 Route::get('/', function () {
@@ -35,10 +36,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('{task}/comments/{id}', [TaskController::class, 'deleteComment'])->name('comments.destroy');
         Route::put('{task}/assign', [TaskController::class, 'assignUser'])->name('assign');
         Route::put('{task}/remove-assign', [TaskController::class, 'removeAssignUser'])->name('remove-assign');
+        Route::post('{task}/attachments', [TaskController::class, 'addAttachments'])->name('attachments.store');
     });
     Route::resource('tasks', TaskController::class);
     Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus'])
         ->name('tasks.update-status');
+
+
+    Route::resource('attachments', AttachmentController::class);
 
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::prefix('users')->as('users.')->group(function () {

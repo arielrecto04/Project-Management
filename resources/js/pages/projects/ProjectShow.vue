@@ -85,6 +85,10 @@ const mobileMenuOpen = ref(false);
 const drawerOpen = ref(false);
 const selectedTask = ref<Task | null>(null);
 
+// Toggle state for attachments "see more"
+const showAllTaskAttachments = ref(false);
+const showAllProjectAttachments = ref(false);
+
 // --- Share modal state & helpers ---
 const shareModalOpen = ref(false);
 const shareCopied = ref(false);
@@ -446,7 +450,61 @@ const selectAssignee = (user: { id: number, name: string }) => {
     });
 };
 
+// Task attachments file input + handlers
+const taskFileInput = ref<HTMLInputElement | null>(null);
 
+const openTaskFileInput = () => {
+    taskFileInput.value?.click();
+};
+
+const handleTaskFileUpload = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const files = target.files;
+    if (!files?.length || !selectedTask.value) return;
+
+    const formData = new FormData();
+    Array.from(files).forEach((file) => formData.append('files[]', file));
+
+    router.post(route('tasks.attachments.store', selectedTask.value.id), formData, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: (page) => {
+            // optimistic: push returned attachments into selectedTask attachments if present
+            const returned = page.props?.value?.attachments ?? page.props?.attachments ?? null;
+            if (returned && selectedTask.value && (selectedTask.value as any).attachments) {
+                (selectedTask.value as any).attachments.push(...returned);
+            }
+            if (taskFileInput.value) taskFileInput.value.value = '';
+        },
+        onError: (errors) => {
+            console.error('Upload failed', errors);
+        },
+    });
+};
+
+const downloadTaskAttachment = (attachment: any) => {
+    if (!selectedTask.value) return;
+    window.open(route('tasks.attachments.download', [selectedTask.value.id, attachment.id]), '_blank');
+};
+
+const deleteTaskAttachment = (attachment: any) => {
+    if (!selectedTask.value) return;
+    if (!confirm('Delete attachment?')) return;
+
+    router.delete(
+        route('attachments.destroy', attachment.id),
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                // remove from local selectedTask attachments
+                const arr = (selectedTask.value as any).attachments || [];
+                const idx = arr.findIndex((a: any) => a.id === attachment.id);
+                if (idx !== -1) arr.splice(idx, 1);
+            },
+        },
+    );
+};
 </script>
 
 <template>
@@ -549,7 +607,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                             <div>
                                 <p class="text-xs text-gray-500">End Date</p>
                                 <p class="text-xs font-medium text-gray-900 sm:text-sm">{{ project.end_date || 'Not set'
-                                }}</p>
+                                    }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -626,7 +684,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                         <div class="flex flex-col">
                                             <span class="text-xs text-gray-500 font-medium">Assigned to</span>
                                             <span class="text-sm text-gray-700 font-medium">{{ item.assignee.name
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
                                     <div v-else class="flex items-center gap-2 text-xs text-gray-400">
@@ -680,7 +738,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                                                     {{ selectedTask.assignee.name.charAt(0) }}
                                                                 </span>
                                                                 <span class="text-sm">{{ selectedTask.assignee.name
-                                                                }}</span>
+                                                                    }}</span>
                                                                 <Link
                                                                     :href="route('tasks.remove-assign', selectedTask.id)"
                                                                     method="put" variant="ghost" size="sm">
@@ -781,7 +839,7 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                                         <div class="mt-2">
                                                             <div v-if="getTaskAttachments(selectedTask.id).length"
                                                                 class="space-y-2">
-                                                                <div v-for="att in getTaskAttachments(selectedTask.id)"
+                                                                <div v-for="att in getTaskAttachments(selectedTask.id).slice(0, showAllTaskAttachments ? undefined : 5)"
                                                                     :key="att.id"
                                                                     class="flex justify-between items-center p-2 rounded-lg border">
                                                                     <div class="flex gap-2 items-center">
@@ -795,16 +853,37 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                                                                 formatFileSize(att.size) }}</p>
                                                                         </div>
                                                                     </div>
-                                                                    <Button variant="ghost" size="sm"
-                                                                        class="p-1 text-gray-500">
-                                                                        <Download class="w-4 h-4" />
-                                                                    </Button>
+                                                                    <div class="flex gap-2 z-50">
+                                                                        <a :href="att.path" target="_blank" download
+                                                                            class="text-sm text-blue-600 hover:underline">
+                                                                            <Download class="w-4 h-4 text-blue-500" />
+                                                                        </a>
+                                                                        <button type="button"
+                                                                            @click="deleteTaskAttachment(att)"
+                                                                            class="text-sm text-red-600 hover:underline">
+                                                                            <Trash2 class="w-4 h-4 text-red-500" />
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
+                                                                <Button
+                                                                    v-if="getTaskAttachments(selectedTask.id).length > 5"
+                                                                    variant="ghost" size="sm"
+                                                                    class="w-full text-xs text-blue-600"
+                                                                    @click="showAllTaskAttachments = !showAllTaskAttachments">
+                                                                    {{ showAllTaskAttachments ? 'Show less' : `Show
+                                                                    ${getTaskAttachments(selectedTask.id).length - 5}
+                                                                    more` }}
+                                                                </Button>
                                                             </div>
                                                             <p v-else class="text-sm text-gray-500">No attachments for
                                                                 this task.</p>
-                                                            <Button variant="outline" size="sm" class="mt-2 text-xs">
-                                                                Add attachment </Button>
+                                                            <Button variant="outline" size="sm" class="mt-2 text-xs"
+                                                                @click="openTaskFileInput">
+                                                                Add attachment
+                                                            </Button>
+                                                            <input type="file" ref="taskFileInput" class="hidden"
+                                                                @change="handleTaskFileUpload" multiple
+                                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -955,7 +1034,8 @@ const selectAssignee = (user: { id: number, name: string }) => {
                             <p class="hidden text-xs text-gray-500 sm:block">Size</p>
                         </div>
                         <div class="space-y-2 divide-y sm:space-y-0">
-                            <div v-for="attachment in project.attachments" :key="attachment.id"
+                            <div v-for="attachment in (project.attachments || []).slice(0, showAllProjectAttachments ? undefined : 5)"
+                                :key="attachment.id"
                                 class="flex flex-col gap-3 py-3 group sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                 <div class="flex gap-2 items-center min-w-0 sm:gap-3">
                                     <div
@@ -988,6 +1068,14 @@ const selectAssignee = (user: { id: number, name: string }) => {
                                         </Button>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div v-if="project.attachments?.length > 5" class="pt-2">
+                                <Button variant="ghost" size="sm" class="w-full text-xs text-blue-600"
+                                    @click="showAllProjectAttachments = !showAllProjectAttachments">
+                                    {{ showAllProjectAttachments ? 'Show less' : `Show ${project.attachments.length - 5}
+                                    more` }}
+                                </Button>
                             </div>
                         </div>
                     </div>

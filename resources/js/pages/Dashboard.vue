@@ -4,7 +4,15 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { CheckCircleIcon, ClipboardDocumentListIcon, ClockIcon, UsersIcon } from '@heroicons/vue/24/outline';
 import { Head } from '@inertiajs/vue3';
+
+// added chart imports
 import AreaChart from '@/components/charts/AreaChart.vue';
+import LineChart from '@/components/charts/LineChart.vue';
+import StackedBarChart from '@/components/charts/StackedBarChart.vue';
+import DonutChart from '@/components/charts/DonutChart.vue';
+import ScatterChart from '@/components/charts/ScatterChart.vue';
+import GroupedBarChart from '@/components/charts/GroupedBarChart.vue';
+import TimelineChart from '@/components/charts/TimelineChart.vue';
 
 interface DashboardStats {
     totalProjects: number;
@@ -64,6 +72,7 @@ const statsCards = [
 </script>
 
 <template>
+
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
@@ -81,7 +90,72 @@ const statsCards = [
                     <div class="absolute bottom-0 left-0 w-full h-1" :class="stat.color" />
                 </Card>
             </div>
-            <AreaChart  />
+
+            <!-- Charts Grid: import and use all charts from /components/charts -->
+            <div class="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Area (Overview)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <AreaChart />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Line (Trend)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <LineChart />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Stacked Bar</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <StackedBarChart />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Donut (Distribution)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <DonutChart />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Scatter</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ScatterChart />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Grouped Bar</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <GroupedBarChart />
+                    </CardContent>
+                </Card>
+
+                <!-- <Card class="md:col-span-2 lg:col-span-3">
+                    <CardHeader>
+                        <CardTitle>Timeline</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <TimelineChart />
+                    </CardContent>
+                </Card> -->
+            </div>
 
             <div class="grid gap-6 md:grid-cols-2">
                 <!-- Project Status Chart -->
@@ -98,10 +172,8 @@ const statsCards = [
                                         <span class="text-sm text-gray-500">{{ status.count }}</span>
                                     </div>
                                     <div class="w-full h-2 bg-gray-100 rounded-full">
-                                        <div
-                                            class="h-2 bg-orange-500 rounded-full"
-                                            :style="`width: ${(status.count / stats.totalProjects) * 100}%`"
-                                        />
+                                        <div class="h-2 bg-orange-500 rounded-full"
+                                            :style="`width: ${(status.count / stats.totalProjects) * 100}%`" />
                                     </div>
                                 </div>
                             </div>
@@ -116,7 +188,8 @@ const statsCards = [
                     </CardHeader>
                     <CardContent>
                         <div class="space-y-4">
-                            <div v-for="activity in stats.recentActivities" :key="activity.id" class="flex items-center space-x-4">
+                            <div v-for="activity in stats.recentActivities" :key="activity.id"
+                                class="flex items-center space-x-4">
                                 <div class="flex-1 space-y-1">
                                     <p class="text-sm font-medium">{{ activity.description }}</p>
                                     <div class="flex items-center text-xs text-gray-500">

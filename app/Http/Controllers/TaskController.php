@@ -7,13 +7,15 @@ use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Project;
 use App\Enums\TaskStatus;
-use App\Mail\TaskAssignedMail;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Mail\TaskAssignedMail;
+use App\Models\Attachment;
 use Illuminate\Validation\Rule;
 use App\Notifications\TaskAssigned;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\Response;
 use App\Models\Comment; // if you have a Comment model
 
 class TaskController extends Controller
@@ -299,5 +301,40 @@ class TaskController extends Controller
             'type' => 'success',
             'message' => 'Task unassigned successfully'
         ]);
+    }
+
+    public function addAttachments(Request $request, Task $task)
+    {
+
+        $request->validate([
+            'files.*' => 'required|file|max:10240' // 10MB max per file
+        ]);
+
+
+
+        foreach ($request->file('files') as $file) {
+            $fileName = 'TSK-' . Str::random(40) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs(
+                "tasks/attachments",
+                $fileName,
+                'public' // Changed to public disk
+            );
+
+
+            Attachment::create([
+                'name' => $file->getClientOriginalName(),
+                'path' =>  asset('/storage/' . $path),
+                'type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'user_id' => Auth::user()->id,
+                'extension' => $file->getClientOriginalExtension(),
+                'mime_type' => $file->getClientMimeType(),
+                'attachable_id' => $task->id,
+                'attachable_type' => get_class($task),
+                'user_id' => Auth::user()->id,
+            ]);
+        }
+
+        return redirect()->back();
     }
 }

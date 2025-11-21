@@ -28,7 +28,7 @@ class Project extends Model
 
     public function tasks()
     {
-        return $this->hasMany(Task::class);
+        return $this->hasMany(Task::class)->with(['attachments', 'createdBy', 'assigneeTo']);
     }
 
     public function attachments()

@@ -13,6 +13,8 @@ class Attachment extends Model
         'size',
         'extension',
         'mime_type',
+        'attachable_id',
+        'attachable_type',
         'user_id',
     ];
 
