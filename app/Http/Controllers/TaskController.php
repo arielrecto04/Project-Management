@@ -7,11 +7,12 @@ use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Project;
 use App\Enums\TaskStatus;
+use App\Models\Attachment;
 use Illuminate\Support\Str;
+use App\Mail\NewTaskComment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Mail\TaskAssignedMail;
-use App\Models\Attachment;
 use Illuminate\Validation\Rule;
 use App\Notifications\TaskAssigned;
 use Illuminate\Support\Facades\Auth;
@@ -126,11 +127,6 @@ class TaskController extends Controller
         $oldAssignee = $task->assignee_to;
         $task->update($validated);
 
-        // Send notification if assignee has changed
-        if ($validated['assignee_to'] !== $oldAssignee) {
-            $assignee = User::find($validated['assignee_to']);
-            $assignee->notify(new TaskAssigned($task));
-        }
 
         return redirect()
             ->route('tasks.index')
@@ -179,18 +175,50 @@ class TaskController extends Controller
     public function addComment(Request $request, Task $task)
     {
 
+        $commenter = Auth::user();
+
+
         $validated = $request->validate([
             'body' => 'required|string|max:1000',
         ]);
 
-        $task->comments()->create([
+        $comment = $task->comments()->create([
             'user_id' => Auth::id(),
             'body' => $validated['body'],
         ]);
 
+        $commenter = Auth::user();
+        $actionUrl = route('tasks.show', $task->id);
+
+        // Notify the task assignee if they are not the commenter
+        if ($task->assignee_to !== $commenter->id) {
+            $assignee = User::find($task->assignee_to);
+
+            if ($assignee) {
+                Mail::to($assignee->email)->send(new NewTaskComment($assignee, $task, $comment, $commenter, $actionUrl));
+            }
+        }
+
+        // Notify other commenters (excluding the commenter)
+        $otherCommenters = $task->comments()
+            ->whereNotNull('user_id')
+            ->where('user_id', '!=', $commenter->id)
+            ->where('user_id', '!=', $task->assignee_to)
+            ->pluck('user_id')
+            ->unique();
+
+
+
+        foreach ($otherCommenters as $userId) {
+            $user = User::find($userId);
+            if ($user) {
+                Mail::to($user->email)->send(new NewTaskComment($user, $task, $comment, $commenter, $actionUrl));
+            }
+        }
+
         return back()->with('flash', [
             'type' => 'success',
-            'message' => 'Comment added successfully'
+            'message' => 'Comment added successfully',
         ]);
     }
 
@@ -278,6 +306,10 @@ class TaskController extends Controller
         if (method_exists($task, 'assignee')) {
             $task->load('assignee');
         }
+
+
+
+
 
         return back()->with('flash', [
             'type' => 'success',

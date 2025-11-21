@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Notifications\TaskAssigned;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TaskAssignedMail;
 
 class Task extends Model
 {
@@ -37,14 +39,14 @@ class Task extends Model
         static::created(function ($task) {
             if ($task->assignee_to) {
                 $assignee = User::find($task->assignee_to);
-                $assignee->notify(new TaskAssigned($task));
+                Mail::to($assignee->email)->send(new TaskAssignedMail($task, $assignee));
             }
         });
 
         static::updated(function ($task) {
             if ($task->isDirty('assignee_to') && $task->assignee_to) {
                 $assignee = User::find($task->assignee_to);
-                $assignee->notify(new TaskAssigned($task));
+                Mail::to($assignee->email)->send(new TaskAssignedMail($task, $assignee));
             }
         });
     }

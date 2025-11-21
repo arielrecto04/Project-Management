@@ -34,7 +34,7 @@ class TaskAssignedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.task-assigned',
+            view: 'emails.task-assigned',
             with: [
                 'task' => $this->task,
                 'notifiable' => $this->assignee,

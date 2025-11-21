@@ -89,6 +89,9 @@ const selectedTask = ref<Task | null>(null);
 const showAllTaskAttachments = ref(false);
 const showAllProjectAttachments = ref(false);
 
+// Toggle state for comments "see more"
+const showAllTaskComments = ref(false);
+
 // --- Share modal state & helpers ---
 const shareModalOpen = ref(false);
 const shareCopied = ref(false);
@@ -607,7 +610,7 @@ const deleteTaskAttachment = (attachment: any) => {
                             <div>
                                 <p class="text-xs text-gray-500">End Date</p>
                                 <p class="text-xs font-medium text-gray-900 sm:text-sm">{{ project.end_date || 'Not set'
-                                    }}</p>
+                                }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -684,7 +687,7 @@ const deleteTaskAttachment = (attachment: any) => {
                                         <div class="flex flex-col">
                                             <span class="text-xs text-gray-500 font-medium">Assigned to</span>
                                             <span class="text-sm text-gray-700 font-medium">{{ item.assignee.name
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
                                     <div v-else class="flex items-center gap-2 text-xs text-gray-400">
@@ -738,7 +741,7 @@ const deleteTaskAttachment = (attachment: any) => {
                                                                     {{ selectedTask.assignee.name.charAt(0) }}
                                                                 </span>
                                                                 <span class="text-sm">{{ selectedTask.assignee.name
-                                                                    }}</span>
+                                                                }}</span>
                                                                 <Link
                                                                     :href="route('tasks.remove-assign', selectedTask.id)"
                                                                     method="put" variant="ghost" size="sm">
@@ -838,8 +841,8 @@ const deleteTaskAttachment = (attachment: any) => {
                                                             Attachments</h4>
                                                         <div class="mt-2">
                                                             <div v-if="getTaskAttachments(selectedTask.id).length"
-                                                                class="space-y-2">
-                                                                <div v-for="att in getTaskAttachments(selectedTask.id).slice(0, showAllTaskAttachments ? undefined : 5)"
+                                                                class="space-y-2 max-h-[20rem] overflow-y-auto pr-1">
+                                                                <div v-for="att in getTaskAttachments(selectedTask.id).slice(0, showAllTaskAttachments ? undefined : 3)"
                                                                     :key="att.id"
                                                                     class="flex justify-between items-center p-2 rounded-lg border">
                                                                     <div class="flex gap-2 items-center">
@@ -889,7 +892,7 @@ const deleteTaskAttachment = (attachment: any) => {
                                                 </div>
                                             </div>
 
-                                            <div class="px-4 py-4 w-1/2">
+                                            <div class="px-4 py-4 w-1/2 ml-10">
                                                 <div class="flex gap-2 items-center mb-3">
                                                     <List class="w-5 h-5 text-muted-foreground" />
                                                     <h4 class="font-semibold text-gray-800 text-md">Activity</h4>
@@ -917,19 +920,17 @@ const deleteTaskAttachment = (attachment: any) => {
 
                                                 <div class="mt-4 space-y-3">
                                                     <div v-if="getTaskComments(selectedTask.id).length"
-                                                        class="space-y-3">
-                                                        <div v-for="comment in getTaskComments(selectedTask.id)"
+                                                        class="space-y-3 max-h-[45rem] overflow-y-auto pr-1">
+                                                        <div v-for="comment in getTaskComments(selectedTask.id).slice(0, showAllTaskComments ? undefined : 8)"
                                                             :key="comment.id" class="flex gap-2">
                                                             <span
                                                                 class="flex justify-center items-center w-8 h-8 text-sm font-medium text-gray-600 bg-gray-200 rounded-full">
                                                                 {{ comment.user?.name?.charAt(0) || '?' }}
                                                             </span>
-
                                                             <div class="flex-1 p-2 bg-gray-100 rounded-lg">
                                                                 <div class="flex items-center justify-between">
                                                                     <p class="text-sm font-semibold text-gray-900">{{
                                                                         comment.user?.name }}</p>
-
                                                                     <div class="flex gap-2">
                                                                         <!-- show edit/delete only to owner -->
                                                                         <template
@@ -950,21 +951,27 @@ const deleteTaskAttachment = (attachment: any) => {
                                                                         </template>
                                                                     </div>
                                                                 </div>
-
                                                                 <!-- edit mode -->
                                                                 <div v-if="editingCommentId === comment.id"
                                                                     class="mt-2">
                                                                     <textarea v-model="editingCommentBody" rows="3"
                                                                         class="w-full rounded border p-2 text-sm"></textarea>
                                                                 </div>
-
                                                                 <!-- display mode -->
                                                                 <p v-else class="text-sm text-gray-700 mt-1">{{
                                                                     comment.body }}</p>
-
                                                                 <p class="mt-1 text-xs text-gray-500">{{
                                                                     comment.timestamp }}</p>
                                                             </div>
+                                                        </div>
+                                                        <div v-if="getTaskComments(selectedTask.id).length > 5"
+                                                            class="pt-2">
+                                                            <Button variant="ghost" size="sm"
+                                                                class="w-full text-xs text-blue-600"
+                                                                @click="showAllTaskComments = !showAllTaskComments">
+                                                                {{ showAllTaskComments ? 'Show less' : `Show
+                                                                ${getTaskComments(selectedTask.id).length - 5} more` }}
+                                                            </Button>
                                                         </div>
                                                     </div>
 
@@ -975,7 +982,7 @@ const deleteTaskAttachment = (attachment: any) => {
                                         </div>
 
                                         <DrawerFooter
-                                            class="sticky bottom-0 flex-row gap-2 px-4 mt-4 border-t bg-background">
+                                            class="sticky -bottom-5 flex-row gap-2 px-4 mt-4 border-t bg-white">
                                             <Button v-if="selectedTask.status !== 'completed'" @click="markAsDone"
                                                 class="flex-1">
                                                 Mark as Done
