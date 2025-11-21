@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
-import { Calendar, CheckCircle2, Clock, ListTodo, Search, Users } from 'lucide-vue-next';
+import { Calendar, CheckCircle2, Clock, ListTodo, Search, Users, LayoutDashboard } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface Task {
@@ -152,12 +152,21 @@ const formatDate = (date: string) => {
                     <h1 class="text-2xl font-bold text-gray-900">My Tasks</h1>
                     <p class="mt-1 text-sm text-gray-500">View and manage your assigned tasks</p>
                 </div>
-                <div class="relative w-72">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Search class="h-4 w-4 text-gray-400" />
+
+                <!-- Board link + Search -->
+                <div class="flex items-center gap-3">
+                    <Link :href="route('tasks.board')"
+                        class="inline-flex items-center text-sm bg-white px-3 py-1 rounded shadow-sm hover:bg-gray-50">
+                    <LayoutDashboard class="h-4 w-4 mr-1" />
+                    </Link>
+
+                    <div class="relative w-72">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Search class="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input v-model="searchQuery" type="search" placeholder="Search tasks..."
+                            class="block w-full rounded-md border border-gray-200 py-2 pl-10 pr-3 text-sm placeholder:text-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
                     </div>
-                    <input v-model="searchQuery" type="search" placeholder="Search tasks..."
-                        class="block w-full rounded-md border border-gray-200 py-2 pl-10 pr-3 text-sm placeholder:text-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
                 </div>
             </div>
 

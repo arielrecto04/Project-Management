@@ -369,4 +369,53 @@ class TaskController extends Controller
 
         return redirect()->back();
     }
+
+    // New: board view for user's tasks (grouped by due date)
+    public function board(Request $request)
+    {
+        $query = Task::with(['project', 'assigneeTo', 'comments.user', 'attachments'])
+            ->where(function ($q) {
+                // show tasks relevant to current user: assigned to or created by or within user's projects
+                $q->where('assignee_to', Auth::id())
+                    ->orWhere('created_by', Auth::id());
+            })->orderByRaw("CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC");
+
+        // optional filters (status/search) can be passed
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")
+                    ->orWhere('description', 'like', "%{$s}%");
+            });
+        }
+
+        $tasks = $query->get()->map(function ($t) {
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'description' => $t->description,
+                'due_date' => $t->due_date,
+                'start_date' => $t->start_date,
+                'status' => $t->status,
+                'project' => $t->project ? ['id' => $t->project->id, 'name' => $t->project->name] : null,
+                'assigneeTo' => $t->assigneeTo ? ['id' => $t->assigneeTo->id, 'name' => $t->assigneeTo->name] : null,
+                'attachments' => $t->attachments->map(function ($a) {
+                    return ['id' => $a->id, 'name' => $a->name, 'path' => $a->path, 'type' => $a->type, 'size' => $a->size];
+                }),
+                'comments' => $t->comments->map(function ($c) {
+                    return ['id' => $c->id, 'body' => $c->body, 'user' => $c->user ? ['id' => $c->user->id, 'name' => $c->user->name] : null, 'created_at' => $c->created_at];
+                }),
+                'created_at' => $t->created_at,
+            ];
+        })->toArray();
+
+        return Inertia::render('tasks/TaskBoard', [
+            'tasks' => $tasks,
+            'currentUser' => Auth::user() ? ['id' => Auth::user()->id, 'name' => Auth::user()->name] : null,
+        ]);
+    }
 }

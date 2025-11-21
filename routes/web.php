@@ -37,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('{task}/assign', [TaskController::class, 'assignUser'])->name('assign');
         Route::put('{task}/remove-assign', [TaskController::class, 'removeAssignUser'])->name('remove-assign');
         Route::post('{task}/attachments', [TaskController::class, 'addAttachments'])->name('attachments.store');
+        Route::get('board', [TaskController::class, 'board'])->name('board');
     });
     Route::resource('tasks', TaskController::class);
     Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus'])
