@@ -31,7 +31,8 @@ const submit = () => {
         <div class="flex flex-col flex-1 justify-center py-12 min-h-full sm:px-6 lg:px-8">
             <div class="sm:mx-auto sm:w-full sm:max-w-md">
                 <img class="mx-auto w-auto h-10" src="https://iits.website/logo.png" alt="Innovato" />
-                <h2 class="mt-6 text-2xl font-bold tracking-tight leading-9 text-center text-gray-900">Log in to your account</h2>
+                <h2 class="mt-6 text-2xl font-bold tracking-tight leading-9 text-center text-gray-900">Log in to your
+                    account</h2>
             </div>
 
             <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
@@ -43,67 +44,45 @@ const submit = () => {
                     <form @submit.prevent="submit" class="space-y-6">
                         <div class="grid gap-2">
                             <Label for="email" class="text-sm font-medium text-gray-700">Email address</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                required
-                                autofocus
-                                :tabindex="1"
-                                autocomplete="email"
-                                v-model="form.email"
-                                placeholder="email@example.com"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                            />
+                            <Input id="email" type="email" required autofocus :tabindex="1" autocomplete="email"
+                                v-model="form.email" placeholder="email@example.com"
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500" />
                             <InputError :message="form.errors.email" />
                         </div>
 
                         <div class="grid gap-2">
                             <div class="flex justify-between items-center">
                                 <Label for="password" class="text-sm font-medium text-gray-700">Password</Label>
-                                <TextLink
-                                    v-if="canResetPassword"
-                                    :href="route('password.request')"
-                                    class="text-sm text-orange-600 hover:text-orange-500"
-                                    :tabindex="5"
-                                >
+                                <TextLink v-if="canResetPassword" :href="route('password.request')"
+                                    class="text-sm text-orange-600 hover:text-orange-500" :tabindex="5">
                                     Forgot password?
                                 </TextLink>
                             </div>
-                            <Input
-                                id="password"
-                                type="password"
-                                required
-                                :tabindex="2"
-                                autocomplete="current-password"
-                                v-model="form.password"
-                                placeholder="Password"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                            />
+                            <Input id="password" type="password" required :tabindex="2" autocomplete="current-password"
+                                v-model="form.password" placeholder="Password"
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500" />
                             <InputError :message="form.errors.password" />
                         </div>
 
                         <div class="flex items-center">
                             <Label for="remember" class="flex items-center space-x-3">
-                                <Checkbox
-                                    id="remember"
-                                    v-model:checked="form.remember"
-                                    :tabindex="4"
-                                    class="text-orange-600 rounded border-gray-300 focus:ring-orange-500"
-                                />
+                                <Checkbox id="remember" v-model:checked="form.remember" :tabindex="4"
+                                    class="text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
                                 <span class="text-sm text-gray-500">Remember me</span>
                             </Label>
                         </div>
 
-                        <Button type="submit" class="w-full bg-orange-600 hover:bg-orange-700" :tabindex="4" :disabled="form.processing">
+                        <Button type="submit" class="w-full bg-orange-600 hover:bg-orange-700" :tabindex="4"
+                            :disabled="form.processing">
                             <LoaderCircle v-if="form.processing" class="mr-2 w-4 h-4 animate-spin" />
                             Log in
                         </Button>
 
                         <div class="text-sm text-center text-gray-500">
                             Don't have an account?
-                            <TextLink :href="route('register')" :tabindex="5" class="font-semibold text-orange-600 hover:text-orange-500">
+                            <!-- <TextLink :href="route('register')" :tabindex="5" class="font-semibold text-orange-600 hover:text-orange-500">
                                 Sign up
-                            </TextLink>
+                            </TextLink> -->
                         </div>
                     </form>
                 </div>
