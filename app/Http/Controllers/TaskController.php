@@ -53,7 +53,7 @@ class TaskController extends Controller
 
     public function create(Request $request)
     {
-        $projects = Project::select('id', 'name')->get();
+        $projects = Project::with('boardStages')->get();
         $users = User::select('id', 'name')->get();
 
         return Inertia::render('tasks/TaskCreate', [
@@ -72,7 +72,7 @@ class TaskController extends Controller
             'project_id' => 'required|exists:projects,id',
             'assignee_to' => 'nullable|exists:users,id',
             'due_date' => 'required|date',
-            'status' => ['required', Rule::in(TaskStatus::values())]
+            'status' => 'required'
         ]);
 
         $task = Task::create([

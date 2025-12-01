@@ -6,10 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 
 interface Project {
     id: number;
     name: string;
+    board_stages?: any[];
 }
 
 interface User {
@@ -23,6 +25,8 @@ const props = defineProps<{
     project_id?: string;
 }>();
 
+const selectedProject = ref(props.project_id ? props.projects.find(p => p.id.toString() === props.project_id) : null);
+
 const form = useForm({
     name: '',
     description: '',
@@ -32,9 +36,27 @@ const form = useForm({
     status: 'pending',
 });
 
+
+
+watch(() => form.project_id, (newProject) => {
+    // Optional: Add a check to ensure projects exist and newProject isn't empty
+
+    if (!props.projects || !newProject) {
+        selectedProject.value = null;
+        return;
+    }
+
+    selectedProject.value = props.projects.find(p => p.id.toString() === newProject.toString()) || null;
+
+
+    console.log('Selected Project Changed:', selectedProject.value);
+});
+
 const submit = () => {
     form.post(route('tasks.store'));
 };
+
+
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -44,6 +66,7 @@ const breadcrumbs = [
 </script>
 
 <template>
+
     <Head title="Create Task" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-4">
@@ -71,7 +94,8 @@ const breadcrumbs = [
 
                         <div>
                             <Label for="project">Project</Label>
-                            <select id="project" v-model="form.project_id" class="w-full rounded-md border-gray-300" required>
+                            <select id="project" v-model="form.project_id" class="w-full rounded-md border-gray-300"
+                                required>
                                 <option value="">Select a project</option>
                                 <option v-for="project in projects" :key="project.id" :value="project.id">
                                     {{ project.name }}
@@ -105,10 +129,15 @@ const breadcrumbs = [
 
                         <div>
                             <Label for="status">Status</Label>
-                            <select id="status" v-model="form.status" class="w-full rounded-md border-gray-300" required>
-                                <option value="pending">Pending</option>
+                            <select id="status" v-model="form.status" class="w-full rounded-md border-gray-300 "
+                                required>
+
+                                <template v-for="stage in selectedProject?.board_stages || []" :key="stage.id">
+                                    <option :value="stage.name">{{ stage.name }} </option>
+                                </template>
+                                <!-- <option value="pending">Pending</option>
                                 <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
+                                <option value="completed">Completed</option> -->
                             </select>
                             <span v-if="form.errors.status" class="text-sm text-red-500">
                                 {{ form.errors.status }}
