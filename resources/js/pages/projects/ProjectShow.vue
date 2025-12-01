@@ -8,7 +8,8 @@ import { ProjectStatus, ProjectStatusLabels } from '@/enums/ProjectStatus';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Calendar, Download, Eye, FileX, Info, Menu, Paperclip, Plus, Trash2, User, Users, X, List, Send, Loader } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, ref, reactive } from 'vue';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface Task {
     id: number;
@@ -57,6 +58,12 @@ interface Project {
         name: string;
     };
     attachments: Attachment[];
+    board_stages: [{
+        id: number;
+        name: string;
+        color: string;
+        position: number;
+    }];
 }
 
 interface Comment {
@@ -195,57 +202,33 @@ const deleteComment = (commentId: number) => {
 
 // Group tasks by status
 const groupedTasks = computed(() => {
-    const pending = props.project.tasks?.filter((t) => t.status === ProjectStatus.Pending) || [];
-    const inProgress = props.project.tasks?.filter((t) => t.status === ProjectStatus.InProgress) || [];
-    const completed = props.project.tasks?.filter((t) => t.status === ProjectStatus.Completed) || [];
-    console.log(pending, inProgress, completed);
-    return [
-        {
-            id: 1,
-            title: ProjectStatusLabels[ProjectStatus.Pending],
-            tasks: pending.map((t) => ({
-                id: t.id,
-                title: t.name,
-                status: t.status,
-                description: t.description,
-                assignee: t.assignee_to,
-                end_date: t.due_date,
-                created_at: t.created_at,
-                updated_at: t.updated_at,
-                type: 'task',
-            })),
-        },
-        {
-            id: 2,
-            title: ProjectStatusLabels[ProjectStatus.InProgress],
-            tasks: inProgress.map((t) => ({
-                id: t.id,
-                title: t.name,
-                status: t.status,
-                description: t.description,
-                assignee: t.assignee_to,
-                end_date: t.due_date,
-                created_at: t.created_at,
-                updated_at: t.updated_at,
-                type: 'task',
-            })),
-        },
-        {
-            id: 3,
-            title: ProjectStatusLabels[ProjectStatus.Completed],
-            tasks: completed.map((t) => ({
-                id: t.id,
-                title: t.name,
-                status: t.status,
-                description: t.description,
-                assignee: t.assignee_to,
-                end_date: t.due_date,
-                created_at: t.created_at,
-                updated_at: t.updated_at,
-                type: 'task',
-            })),
-        },
-    ];
+
+    console.log('Grouping tasks for project:', props.project);
+    const stages = props?.project?.board_stages || [];
+
+
+
+    console.log('Board stages:', stages);
+    // const pending = props.project.tasks?.filter((t) => t.status === ProjectStatus.Pending) || [];
+    // const inProgress = props.project.tasks?.filter((t) => t.status === ProjectStatus.InProgress) || [];
+    // const completed = props.project.tasks?.filter((t) => t.status === ProjectStatus.Completed) || [];
+    // console.log(pending, inProgress, completed);
+    return stages.map(stage => ({
+
+        id: stage.id,
+        tasks: (props.project.tasks || []).filter(t => t.status === stage.name).map((t) => ({
+            id: t.id,
+            title: t.name,
+            status: t.status,
+            description: t.description,
+            assignee: t.assignee_to,
+            end_date: t.due_date,
+            created_at: t.created_at,
+            updated_at: t.updated_at,
+            type: 'task',
+        })),
+        title: stage.name,
+    }));
 });
 
 const getStatusColor = (status: string) => {
@@ -508,6 +491,37 @@ const deleteTaskAttachment = (attachment: any) => {
         },
     );
 };
+
+// Stage modal (create stage scoped to this project)
+const showStageModal = ref(false);
+const stageForm = reactive({
+    name: '',
+    color: '#60A5FA',
+    position: null as number | null,
+});
+
+const page = usePage();
+const errors = computed(() => (page.props.value && page.props.value.errors) ? page.props.value.errors : {});
+
+const submitStage = () => {
+    if (!props.project?.id) return;
+
+    router.post(route('projects.board-stages.store', props.project.id), {
+        name: stageForm.name,
+        color: stageForm.color,
+        position: stageForm.position
+    }, {
+        preserveState: true,
+        onSuccess: () => {
+            // close, reset and refresh to load new stages
+            showStageModal.value = false;
+            stageForm.name = '';
+            stageForm.color = '#60A5FA';
+            stageForm.position = null;
+            router.reload(); // refresh to fetch stages and reflect changes
+        },
+    });
+};
 </script>
 
 <template>
@@ -540,6 +554,11 @@ const deleteTaskAttachment = (attachment: any) => {
                     <Link :href="route('projects.timeline', project.id)">
                     <Button variant="outline" size="sm" class="text-xs sm:text-sm">View Timeline</Button>
                     </Link>
+
+                    <!-- Add Stage button (opens modal to create a project-scoped stage) -->
+                    <Button variant="outline" size="sm" class="text-xs sm:text-sm" @click="showStageModal = true">
+                        + Add Stage
+                    </Button>
                 </div>
             </div>
 
@@ -610,7 +629,7 @@ const deleteTaskAttachment = (attachment: any) => {
                             <div>
                                 <p class="text-xs text-gray-500">End Date</p>
                                 <p class="text-xs font-medium text-gray-900 sm:text-sm">{{ project.end_date || 'Not set'
-                                }}</p>
+                                    }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -687,7 +706,7 @@ const deleteTaskAttachment = (attachment: any) => {
                                         <div class="flex flex-col">
                                             <span class="text-xs text-gray-500 font-medium">Assigned to</span>
                                             <span class="text-sm text-gray-700 font-medium">{{ item.assignee.name
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
                                     <div v-else class="flex items-center gap-2 text-xs text-gray-400">
@@ -741,7 +760,7 @@ const deleteTaskAttachment = (attachment: any) => {
                                                                     {{ selectedTask.assignee.name.charAt(0) }}
                                                                 </span>
                                                                 <span class="text-sm">{{ selectedTask.assignee.name
-                                                                }}</span>
+                                                                    }}</span>
                                                                 <Link
                                                                     :href="route('tasks.remove-assign', selectedTask.id)"
                                                                     method="put" variant="ghost" size="sm">
@@ -813,9 +832,9 @@ const deleteTaskAttachment = (attachment: any) => {
 
                                                             </div>
                                                             <div class="text-sm">
-                                                                <span class="text-gray-600">Due:</span> {{
-                                                                    new Date(selectedTask.end_date).toLocaleDateString() ||
-                                                                    'Not set' }}
+                                                                <span class="text-gray-600">Due:</span> }}
+                                                                new Date(selectedTask.end_date).toLocaleDateString() ||
+                                                                'Not set' }}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1133,6 +1152,47 @@ const deleteTaskAttachment = (attachment: any) => {
         </div>
     </div>
 
+    <!-- Create Stage Modal -->
+    <Dialog v-model:open="showStageModal">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Create board stage</DialogTitle>
+            </DialogHeader>
+
+            <div class="space-y-3 py-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Name</label>
+                    <input v-model="stageForm.name" type="text" class="w-full rounded border p-2"
+                        placeholder="e.g. Backlog" />
+                    <p v-if="errors.value?.name" class="text-xs text-red-500 mt-1">{{ errors.value?.name[0] }}</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Color</label>
+                    <div class="flex items-center gap-2">
+                        <input v-model="stageForm.color" type="color" class="w-12 h-8 p-0 border rounded" />
+                        <input v-model="stageForm.color" type="text" class="flex-1 rounded border p-2 text-sm" />
+                    </div>
+                    <p v-if="errors.value?.color" class="text-xs text-red-500 mt-1">{{ errors.value?.color[0] }}</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Position (optional)</label>
+                    <input v-model.number="stageForm.position" type="number" min="0" class="w-24 rounded border p-2"
+                        placeholder="0" />
+                    <p v-if="errors.value?.position" class="text-xs text-red-500 mt-1">{{ errors.value?.position[0] }}
+                    </p>
+                </div>
+            </div>
+
+            <DialogFooter class="flex gap-2 justify-end">
+                <button type="button" class="px-3 py-1 rounded border bg-white"
+                    @click="showStageModal = false">Cancel</button>
+                <button type="button" class="px-3 py-1 rounded bg-primary text-white" @click="submitStage">Create
+                    stage</button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <!-- Share Modal -->

@@ -35,4 +35,9 @@ class Project extends Model
     {
         return $this->morphMany(Attachment::class, 'attachable');
     }
+
+    public function boardStages()
+    {
+        return $this->morphMany(BoardStage::class, 'boardable');
+    }
 }

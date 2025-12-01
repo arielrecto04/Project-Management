@@ -8,6 +8,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { CheckCircle2, ChevronUp, Clock, ListTodo, PlusCircle, TimerIcon, LayoutGrid, Table as TableIcon, Calendar, User, Menu, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { reactive } from 'vue';
 
 interface Project {
     id: number;
@@ -22,8 +24,16 @@ interface Project {
     };
 }
 
+interface BoardStage {
+    id: number;
+    name: string;
+    color?: string;
+    position?: number;
+}
+
 const props = defineProps<{
     projects: Project[];
+    stages?: BoardStage[]; // new prop from server
 }>();
 
 const breadcrumbs = [
@@ -31,74 +41,73 @@ const breadcrumbs = [
     { title: 'Projects', href: '/projects' },
 ];
 
-// View mode state
+
+
+console.log('Loaded projects:', props.projects, 'stages:', props.stages);
+
+// fallback viewMode, etc...
 const viewMode = ref<'table' | 'kanban'>('table');
 const mobileMenuOpen = ref(false);
+// stage modal
+const showStageModal = ref(false);
+const stageForm = reactive({
+    name: '',
+    color: '#60A5FA',
+    position: null as number | null,
 
-// Group projects by status using computed properties
+});
+
+const submitStage = () => {
+    router.post(route('users.board-stages.store'), {
+        name: stageForm.name,
+        color: stageForm.color,
+        position: stageForm.position,
+    }, {
+        preserveState: true,
+        onSuccess: () => {
+            showStageModal.value = false;
+            stageForm.name = '';
+            stageForm.color = '#60A5FA';
+            stageForm.position = null;
+        },
+    });
+};
+
+// Group projects by stages (use stages from props if present)
 const groupedProjects = computed(() => {
-    const pending = (props.projects || []).filter((p) => p.status === ProjectStatus.Pending);
-    const inProgress = (props.projects || []).filter((p) => p.status === ProjectStatus.InProgress);
-    const completed = (props.projects || []).filter((p) => p.status === ProjectStatus.Completed);
+    const stages = props.stages ?? [];
 
-    return [
-        {
-            id: 1,
-            title: ProjectStatusLabels[ProjectStatus.Pending],
-            color: '#FBBF24',
-            tasks: pending.map((p) => ({
-                id: p.id,
-                title: p.name,
-                status: p.status,
-                description: p.description,
-                assignee: p.assignee?.name,
-                start_date: p.start_date,
-                end_date: p.end_date,
-            })),
-        },
-        {
-            id: 2,
-            title: ProjectStatusLabels[ProjectStatus.InProgress],
-            color: '#60A5FA',
-            tasks: inProgress.map((p) => ({
-                id: p.id,
-                title: p.name,
-                status: p.status,
-                description: p.description,
-                assignee: p.assignee?.name,
-                start_date: p.start_date,
-                end_date: p.end_date,
-            })),
-        },
-        {
-            id: 3,
-            title: ProjectStatusLabels[ProjectStatus.Completed],
-            color: '#34D399',
-            tasks: completed.map((p) => ({
-                id: p.id,
-                title: p.name,
-                status: p.status,
-                description: p.description,
-                assignee: p.assignee?.name,
-                start_date: p.start_date,
-                end_date: p.end_date,
-            })),
-        },
-    ];
+    console.log('Grouping projects by stages:', stages);
+    return stages.map((s) => ({
+        id: s.id,
+        title: s.name,
+        color: s.color || '#E5E7EB',
+        tasks: (props.projects || []).filter((p: Project) => {
+            return p.status === s.name;
+        }).map((p: Project) => ({
+            id: p.id,
+            title: p.name,
+            status: p.status,
+            description: p.description,
+            assignee: p.assignee?.name,
+            start_date: p.start_date,
+            end_date: p.end_date,
+        })),
+    }));
 });
 
 // Project counts for summary cards
 const projectCounts = computed(() => ({
-    pending: groupedProjects.value[0].tasks.length,
-    inProgress: groupedProjects.value[1].tasks.length,
-    completed: groupedProjects.value[2].tasks.length,
+    pending: groupedProjects.value[0]?.tasks.length,
+    inProgress: groupedProjects.value[1]?.tasks.length,
+    completed: groupedProjects.value[2]?.tasks.length,
 }));
 
 const updateProjectStatus = (payload: { itemId: number; newStatus: string }) => {
     console.log('Updating project status:', payload);
 
     router.put(
-        route('projects.update-status', { project: payload.itemId }),
+        route('projects.status', { project: payload.itemId }),
         {
             status: payload.newStatus,
         },
@@ -168,6 +177,26 @@ const statusOptions = [ProjectStatus.Pending, ProjectStatus.InProgress, ProjectS
 const changeProjectStatus = (projectId: number, newStatus: string) => {
     updateProjectStatus({ itemId: projectId, newStatus });
 };
+
+/**
+ * Move a project to a different board stage.
+ * payload expected: { itemId: number, newStageId: number }
+ */
+const moveProjectToStage = (payload: { itemId: number; newStatus: string }) => {
+    console.log('Moving project to new stage:', payload);
+
+    router.put(route('projects.update-status', { project: payload.itemId }), {
+        status: payload.newStatus,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            // optimistic UI update: find project and set board_stage_id
+            const p = props.projects.find((x: any) => x.id === payload.itemId);
+            //    if (p) p. = payload.newStatus;
+        },
+    });
+};
 </script>
 
 <template>
@@ -211,6 +240,7 @@ const changeProjectStatus = (projectId: number, newStatus: string) => {
                             <span class="lg:hidden">Create</span>
                         </Button>
                         </Link>
+
                     </div>
                 </div>
             </div>
@@ -407,17 +437,58 @@ const changeProjectStatus = (projectId: number, newStatus: string) => {
             </div>
 
             <!-- Kanban View -->
-            <div v-show="viewMode === 'kanban'" class="space-y-4">
+            <div v-show="viewMode === 'kanban'" class="space-y-4 max-w-[90%] overflow-x-auto">
                 <div class="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                     <h2 class="text-lg font-semibold text-gray-900">Project Board</h2>
                     <div class="text-xs text-gray-500 sm:text-sm">{{ props.projects.length }} total projects</div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <KanbanBoard :columns="groupedProjects" type="project" @item-moved="updateProjectStatus"
-                        class="min-h-[600px]" />
-                </div>
+
+                <KanbanBoard :columns="groupedProjects" type="project"
+                    @item-moved="(payload) => moveProjectToStage(payload)" class="min-h-[600px]">
+
+                    <template #extra-columns>
+                        <div class="w-full sm:w-[320px] md:w-[350px] flex-shrink-0 rounded-lg
+                                bg-orange-50/50 p-4 shadow-sm">
+                            <!-- Add Stage Button -->
+                            <Button variant="outline" size="sm" @click="showStageModal = true">
+                                + Add Stage
+                            </Button>
+                        </div>
+                    </template>
+                </KanbanBoard>
+
+
             </div>
+
+
+            <Dialog v-model:open="showStageModal">
+                <DialogContent class="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Create new board stage</DialogTitle>
+                    </DialogHeader>
+
+                    <div class="space-y-3 py-2">
+                        <label class="block text-xs font-medium text-gray-700">Name</label>
+                        <input v-model="stageForm.name" type="text" class="w-full rounded border p-2"
+                            placeholder="e.g. Backlog" />
+                        <label class="block text-xs font-medium text-gray-700">Color</label>
+                        <input v-model="stageForm.color" type="color" class="w-20 h-8 p-0 border rounded" />
+                        <!-- <label class="block text-xs font-medium text-gray-700">Position (optional)</label>
+                        <input v-model.number="stageForm.position" type="number" min="0" class="w-24 rounded border p-2"
+                            placeholder="0" /> -->
+                    </div>
+
+                    <DialogFooter class="flex gap-2 justify-end">
+                        <button type="button" class="px-3 py-1 rounded border bg-white"
+                            @click="showStageModal = false">Cancel</button>
+                        <button type="button" class="px-3 py-1 rounded bg-primary text-white"
+                            @click="submitStage">Create</button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+
         </div>
     </AppLayout>
 </template>

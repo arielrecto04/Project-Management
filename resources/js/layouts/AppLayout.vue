@@ -34,7 +34,7 @@ const flash = computed(() => usePage().props.flash);
         </Transition>
 
         <!-- Main Content -->
-        <div class="flex-1 space-y-4 p-4 sm:space-y-6 sm:p-6">
+        <div class="flex-1 space-y-4 p-4 sm:space-y-6 sm:p-6 max-w-[1280px] w-full">
             <slot />
         </div>
 

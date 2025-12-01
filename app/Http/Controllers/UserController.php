@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Inertia\Inertia;
+use App\Models\BoardStage;
+use Illuminate\Container\Attributes\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth as FacadesAuth;
 
 class UserController extends Controller
 {
@@ -48,5 +52,39 @@ class UserController extends Controller
             ->get();
 
         return response()->json($users);
+    }
+
+
+    public function addStage(Request $request)
+    {
+
+
+        $validated = $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'color'    => ['nullable', 'string', 'max:50'],
+            'position' => ['nullable', 'integer'],
+            'type'     => ['nullable', 'string'], // will be overridden to 'project'
+        ]);
+
+        // optional: authorize user (adjust policy as needed)
+        // $this->authorize('create', BoardStage::class);
+
+        // compute position if not provided
+        $maxPos = BoardStage::where('boardable_type', User::class)
+            ->where('boardable_id', auth()->user()->id)->max('position');
+        $position = $validated['position'] ?? ($maxPos === null ? 0 : $maxPos + 1);
+
+        $stage = BoardStage::create([
+            'boardable_type' => User::class,
+            'boardable_id'   => auth()->user()->id,           // global stage for projects
+            'name'            => $validated['name'],
+            'color'           => $validated['color'] ?? null,
+            'position'        => $position,
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => "Stage '{$stage->name}' created.",
+        ]);
     }
 }

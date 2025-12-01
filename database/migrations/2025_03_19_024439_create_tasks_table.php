@@ -3,6 +3,8 @@
 use App\Models\User;
 use App\Models\Project;
 use App\Enums\TaskStatus;
+use App\Models\BoardStage;
+use App\Enums\BoardStagesDefault;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -21,7 +23,7 @@ return new class extends Migration
             $table->foreignIdFor(Project::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class, 'assignee_to')->nullable()->constrained('users')->cascadeOnDelete();
             $table->date('due_date')->nullable();
-            $table->enum('status', TaskStatus::values())->default(TaskStatus::Pending->value);
+            $table->string('status')->default(BoardStagesDefault::TO_DO->value);
             $table->foreignIdFor(User::class, 'created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

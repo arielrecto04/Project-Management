@@ -48,13 +48,16 @@ const handleDrop = (event: DragEvent, targetColumn: Column) => {
 
         try {
             const item: BaseItem = JSON.parse(data);
-            const statusMap: Record<string, string> = {
-                'To Do': ProjectStatus.Pending,
-                'In Progress': ProjectStatus.InProgress,
-                Done: ProjectStatus.Completed,
-            };
+            // const statusMap: Record<string, string> = {
+            //     'To Do': ProjectStatus.Pending,
+            //     'In Progress': ProjectStatus.InProgress,
+            //     Done: ProjectStatus.Completed,
+            // };
 
-            const newStatus = statusMap[targetColumn.title];
+            const newStatus = targetColumn.title;
+
+            // const newStageId = targetColumn.id;
+
 
             if (newStatus && item.status !== newStatus) {
                 emit('item-moved', { itemId: item.id, newStatus });
@@ -112,10 +115,10 @@ const getStatusColor = (status: string) => {
                                         <span
                                             :class="['inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full', getStatusColor(item.status)]">
                                             {{ ProjectStatusLabels[item.status as keyof typeof ProjectStatusLabels] ??
-                                            item.status }}
+                                                item.status }}
                                         </span>
                                         <span v-if="item.priority" class="text-xs text-gray-500">• {{ item.priority
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                 </div>
                                 <div
@@ -138,7 +141,7 @@ const getStatusColor = (status: string) => {
                                 <div v-if="item.start_date || item.end_date"
                                     class="flex gap-3 text-xs text-gray-500 flex-wrap">
                                     <span v-if="item.start_date">{{ new Date(item.start_date).toLocaleDateString()
-                                        }}</span>
+                                    }}</span>
                                     <span v-if="item.end_date">{{ new Date(item.end_date).toLocaleDateString() }}</span>
                                 </div>
 
@@ -165,6 +168,10 @@ const getStatusColor = (status: string) => {
                     </div>
                 </div>
             </div>
+
+            <slot name="extra-columns">
+
+            </slot>
         </div>
     </div>
 </template>

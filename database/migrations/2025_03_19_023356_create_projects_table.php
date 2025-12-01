@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->foreignIdFor(User::class, 'created_by')->constrained('users')->onDelete('cascade');
-            $table->enum('status', ProjectStatus::values())->default(ProjectStatus::Pending->value);
+            $table->string('status')->default(ProjectStatus::Pending->value);
             $table->timestamps();
         });
     }

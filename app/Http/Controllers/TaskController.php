@@ -160,7 +160,7 @@ class TaskController extends Controller
     public function updateStatus(Request $request, Task $task)
     {
         $validated = $request->validate([
-            'status' => Rule::in(TaskStatus::values()),
+            'status' => 'required',
         ]);
 
         $task->update(['status' => $validated['status']]);
