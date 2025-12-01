@@ -107,7 +107,7 @@ const updateProjectStatus = (payload: { itemId: number; newStatus: string }) => 
     console.log('Updating project status:', payload);
 
     router.put(
-        route('projects.status', { project: payload.itemId }),
+        route('projects.update-status', { project: payload.itemId }),
         {
             status: payload.newStatus,
         },
@@ -279,7 +279,7 @@ const moveProjectToStage = (payload: { itemId: number; newStatus: string }) => {
                     <CardContent>
                         <div class="flex items-baseline justify-between">
                             <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.pending
-                                }}</span>
+                            }}</span>
                             <div class="flex items-center gap-1 text-xs text-yellow-600 sm:text-sm">
                                 <ChevronUp class="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Pending</span>
@@ -298,7 +298,7 @@ const moveProjectToStage = (payload: { itemId: number; newStatus: string }) => {
                     <CardContent>
                         <div class="flex items-baseline justify-between">
                             <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.inProgress
-                                }}</span>
+                            }}</span>
                             <div class="flex items-center gap-1 text-xs text-blue-600 sm:text-sm">
                                 <Clock class="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Active</span>
@@ -317,7 +317,7 @@ const moveProjectToStage = (payload: { itemId: number; newStatus: string }) => {
                     <CardContent>
                         <div class="flex items-baseline justify-between">
                             <span class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ projectCounts.completed
-                                }}</span>
+                            }}</span>
                             <div class="text-xs text-green-600 sm:text-sm">
                                 <span>Done</span>
                             </div>
