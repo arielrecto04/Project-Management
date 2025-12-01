@@ -79,7 +79,7 @@ const submit = () => {
                         </Button>
 
                         <div class="text-sm text-center text-gray-500">
-                            Don't have an account?
+                            <!-- Don't have an account? -->
                             <!-- <TextLink :href="route('register')" :tabindex="5" class="font-semibold text-orange-600 hover:text-orange-500">
                                 Sign up
                             </TextLink> -->
