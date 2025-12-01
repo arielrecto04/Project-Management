@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Models\BoardStage;
 use App\Enums\ProjectStatus;
+use App\Enums\BoardStagesDefault;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -21,7 +23,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->foreignIdFor(User::class, 'created_by')->constrained('users')->onDelete('cascade');
-            $table->string('status')->default(ProjectStatus::Pending->value);
+            $table->string('status')->default(BoardStagesDefault::TO_DO->value);
             $table->timestamps();
         });
     }
