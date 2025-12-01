@@ -26,7 +26,8 @@ class ProjectController extends Controller
         $projects = Project::with(['assignee'])->get(); // adjust pagination if needed
 
         // load BoardStage rows for Project board (morph)
-        $stages = BoardStage::where('boardable_type', Project::class)
+        $stages = BoardStage::where('boardable_type', User::class)
+            ->where('boardable_id', auth()->user()->id) // global stages for projects
             ->orderBy('position', 'asc')
             ->get();
 

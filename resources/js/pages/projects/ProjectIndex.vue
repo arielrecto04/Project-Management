@@ -366,9 +366,8 @@ const moveProjectToStage = (payload: { itemId: number; newStatus: string }) => {
                                                     @change="changeProjectStatus(project.id, $event.target.value)"
                                                     class="block w-full text-xs rounded-md border px-2 py-1 bg-white"
                                                     aria-label="Change project status">
-                                                    <option v-for="s in statusOptions" :key="s" :value="s">
-                                                        {{ ProjectStatusLabels[s as keyof typeof ProjectStatusLabels] ??
-                                                            s }}
+                                                    <option v-for="s in stages?.map((s) => s.name)" :key="s" :value="s">
+                                                        {{ s }}
                                                     </option>
                                                 </select>
                                                 <!-- visual pill overlay for status color (non-interactive) -->

@@ -58,13 +58,12 @@ class UserController extends Controller
     public function addStage(Request $request)
     {
 
-
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'color'    => ['nullable', 'string', 'max:50'],
-            'position' => ['nullable', 'integer'],
-            'type'     => ['nullable', 'string'], // will be overridden to 'project'
         ]);
+
+
 
         // optional: authorize user (adjust policy as needed)
         // $this->authorize('create', BoardStage::class);
